@@ -7,7 +7,7 @@ export default function ZipMorph() {
   const [isDragging, setIsDragging] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white min-w-100 text-black font-mono selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-white min-w-150 text-black font-mono selection:bg-black selection:text-white">
       {/* Navigation */}
       <nav className="border-b border-black p-6 flex justify-between items-center">
         <h1 className="text-xl font-bold tracking-tighter uppercase italic">ZipMorph_v2.6</h1>
