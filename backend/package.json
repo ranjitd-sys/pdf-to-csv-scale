@@ -1,0 +1,16 @@
+{
+  "name": "pdf-second",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "effect": "^3.19.16",
+    "unpdf": "^1.4.0"
+  }
+}
