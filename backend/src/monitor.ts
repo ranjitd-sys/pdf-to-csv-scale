@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { extractText } from "unpdf";
@@ -17,7 +18,7 @@ for (const pdf of pdfFiles) {
   const rawBytes = await extractText(data);
 
   const end = performance.now();
-
+  Effect.log("Start to Loggiin")
   console.log(`📄 ${pdf}`);
   console.log(`⏱ Time: ${(end - start).toFixed(2)} ms`);
   console.log(`📦 Size: ${data.byteLength} bytes\n`);
