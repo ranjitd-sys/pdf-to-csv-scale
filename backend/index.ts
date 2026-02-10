@@ -5,6 +5,7 @@ import { mkdir } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import path from "node:path";
 import cors from "@fastify/cors";
+import { $ } from "bun";
 const fastify = Fastify({
   logger: true,
 });
@@ -27,10 +28,10 @@ fastify.post("/upload", async (req, res) => {
     const parts = req.parts();
     for await (const part of parts) {
       if (part.type === "file") {
-        
         const safeFile = `${part.filename}`;
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
+        await $`unzip ${UPLOAD_DIR}/${safeFile} -d output-folder`
       } else {
         options[part.fieldname] = part.value as string;
       }
