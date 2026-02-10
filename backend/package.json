@@ -10,7 +10,10 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@fastify/busboy": "^3.2.0",
+    "@fastify/multipart": "^9.4.0",
     "effect": "^3.19.16",
+    "fastify": "^5.7.4",
     "unpdf": "^1.4.0"
   }
 }

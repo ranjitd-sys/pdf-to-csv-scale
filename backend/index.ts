@@ -1,27 +1,43 @@
-import { readdir } from "fs/promises";
-import { join } from "path";
-import { extractText } from "unpdf";
+import Fastify from 'fastify';
+import multipart from '@fastify/multipart';
+import { createWriteStream } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
+import path from 'node:path';
 
-const folderPath = "./data";
+const fastify = Fastify({
+    logger:true
+});
 
-const startTotal = performance.now();
+fastify.register(multipart, {
+    limits:{
+        fileSize: 100 * 1024 * 1024
+    }
+});
+const UPLOAD_DIR = './uploads';
+await mkdir(UPLOAD_DIR, { recursive: true });
 
-const files = await readdir(folderPath);
-const pdfFiles = files.filter(file => file.endsWith(".pdf"));
+fastify.post('/upload', async(req, res)=>{
+    const options : Record<string,string>  = {};
+    let filePath = '';
+    const parts = req.parts();
+    for await (const part of parts){
+        if(part.type === "file"){
+            console.log(part);
+            const safeFile = `pdfyz_${Date.now()}_${part.filename}`
+            const filePath = path.join();
+            await pipeline(part.file, createWriteStream(filePath))
+        }
+        else{
+            options[part.fieldname] = part.value as string;
+        }
+    }
+});
 
-for (const pdf of pdfFiles) {
-  const start = performance.now();
-
-  const filePath = join(folderPath, pdf);
-  const data = await Bun.file(filePath).arrayBuffer();
-  const rawBytes = await extractText(data);
-
-  const end = performance.now();
-
-  console.log(`📄 ${pdf}`);
-  console.log(`⏱ Time: ${(end - start).toFixed(2)} ms`);
-  console.log(`📦 Size: ${data.byteLength} bytes\n`);
+try {
+  await fastify.listen({ port: 8080 });
+  console.log("⚡ XYZ Engine: Fastify/Multipart Online");
+} catch (err) {
+  fastify.log.error(err);
+  process.exit(1);
 }
-
-const endTotal = performance.now();
-console.log(`🚀 Total time: ${(endTotal - startTotal).toFixed(2)} ms , total pdf ${pdfFiles.length} , avarage time for 1 pdf ${Number((endTotal - startTotal).toFixed(2)) / pdfFiles.length}`);
