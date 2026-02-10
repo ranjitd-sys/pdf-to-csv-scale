@@ -6,7 +6,7 @@ import { pipeline } from "node:stream/promises";
 import path from "node:path";
 import cors from "@fastify/cors";
 import { $ } from "bun";
-import { getAllFiles } from "./mainProcess/read";
+import { ConvertToCsv } from "./mainProcess/process";
 import { Effect } from "effect";
 const fastify = Fastify({
   logger: true,
@@ -34,7 +34,7 @@ fastify.post("/upload", async (req, res) => {
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        const allPdfData = await Effect.runPromise(getAllFiles);
+        const allPdfData = await Effect.runPromise(ConvertToCsv);
         console.log(allPdfData) 
         return {
           status: "SUCCESS",
