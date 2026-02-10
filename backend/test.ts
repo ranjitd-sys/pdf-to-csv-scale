@@ -12,5 +12,6 @@ function normalize(text: string) {
     .trim();
 }
 const res = normalize(text.text.join('\n'));
+console.log(res)
 const data = parseInvoiceBlock(res);
 console.log(data)
