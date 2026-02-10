@@ -5,8 +5,6 @@ import { extractText } from "unpdf";
 const folderPath = "./out";
 
 export const getAllFiles = Effect.gen(function* () {
-  const allPdfContent: string[] = [];
-
   const files = yield* Effect.promise(() => readdir(folderPath));
   const pdfFiles = files.filter(file => file.endsWith(".pdf"));
 
@@ -21,10 +19,7 @@ export const getAllFiles = Effect.gen(function* () {
       extractText(data)
     );
 
-    for (const page of rawBytes.text) {
-      allPdfContent.push(page);
-    }
+    return rawBytes.text;
   }
 
-  return allPdfContent;
 });
