@@ -31,7 +31,12 @@ fastify.post("/upload", async (req, res) => {
         const safeFile = `${part.filename}`;
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
-        await $`unzip ${UPLOAD_DIR}/${safeFile} -d output-folder`
+        await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
+        return {
+          status: "SUCCESS",
+          message: "Data Parse Sussessfully",
+          processedParams: options,
+        };
       } else {
         options[part.fieldname] = part.value as string;
       }

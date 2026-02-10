@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { extractText } from "unpdf";
-const folderPath = "../data";
+const folderPath = "../out";
 
 export const getAllFiles = Effect.gen(function* () {
   const allPdfContent: string[] = [];
