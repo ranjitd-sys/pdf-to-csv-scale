@@ -5,7 +5,7 @@ import { extractText } from "unpdf";
 import { parseInvoiceBlock } from "./match";
 const folderPath = "./out";
 
-export const ConvertToCsv = Effect.gen(function* () {
+export const Process = Effect.gen(function* () {
   let allPdfContent = [];
 
   const files = yield* Effect.promise(() => readdir(folderPath));
@@ -22,8 +22,7 @@ export const ConvertToCsv = Effect.gen(function* () {
     
   }
   const result = allPdfContent.flatMap(data => data);
-  console.log(result)
   return result;
 });
-const res = await Effect.runPromise(ConvertToCsv);
-
+const res = await Effect.runPromise(Process);
+console.log(res)

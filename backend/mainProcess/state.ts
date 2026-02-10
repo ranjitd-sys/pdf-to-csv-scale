@@ -37,7 +37,6 @@ const INDIAN_STATES = [
   "Lakshadweep"
 ];
 
-
 export  function extractIndianState(text: string): string {
   const normalized = text.toLowerCase();
 
