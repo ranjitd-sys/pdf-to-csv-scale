@@ -1,10 +1,13 @@
 import { Effect } from "effect";
 import { readdir } from "fs/promises";
-import { join } from "path";
+import { join, normalize } from "path";
 import { extractText } from "unpdf";
+import { extractShipTo } from "./match";
 const folderPath = "./out";
 
 export const getAllFiles = Effect.gen(function* () {
+  let allPdfContent: string[] = [];
+
   const files = yield* Effect.promise(() => readdir(folderPath));
   const pdfFiles = files.filter(file => file.endsWith(".pdf"));
 
@@ -18,8 +21,11 @@ export const getAllFiles = Effect.gen(function* () {
     const rawBytes = yield* Effect.promise(() =>
       extractText(data)
     );
-
-    return rawBytes.text;
+    const res = rawBytes.text.
+    map(normalize)
+    .map(extractShipTo)
+    console.log(res)
   }
-
+  return allPdfContent;
 });
+const data = await Effect.runPromise(getAllFiles);
