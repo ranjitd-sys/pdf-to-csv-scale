@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { extractText } from "unpdf";
-const folderPath = "../out";
+const folderPath = "./out";
 
 export const getAllFiles = Effect.gen(function* () {
   const allPdfContent: string[] = [];
@@ -28,6 +28,3 @@ export const getAllFiles = Effect.gen(function* () {
 
   return allPdfContent;
 });
-
-const res = await Effect.runPromise(getAllFiles);
-console.log(res)

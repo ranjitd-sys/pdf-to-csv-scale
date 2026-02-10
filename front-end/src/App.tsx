@@ -149,7 +149,7 @@ export default function ZipMorph() {
           </h2>
         </section>
 
-        <div className="border-2 border-black min-h-[600px] flex flex-col">
+        <div className="border-2 border-black min-h-150 flex flex-col">
           
           {/* --------------------------------------------------------- */}
           {/* VIEW: IDLE & UPLOADING (Original UI)                      */}
@@ -429,7 +429,7 @@ export default function ZipMorph() {
                 >
                   <RefreshCcw size={14} /> Start New
                 </button>
-                <button className="flex-[2] py-4 bg-black text-white flex items-center justify-center gap-2 hover:tracking-widest transition-all uppercase font-bold text-xs">
+                <button className="flex-2 py-4 bg-black text-white flex items-center justify-center gap-2 hover:tracking-widest transition-all uppercase font-bold text-xs">
                   <Download size={14} /> Download {targetType}
                 </button>
               </div>
