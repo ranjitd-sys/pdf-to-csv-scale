@@ -27,8 +27,8 @@ fastify.post("/upload", async (req, res) => {
     const parts = req.parts();
     for await (const part of parts) {
       if (part.type === "file") {
-        console.log(part);
-        const safeFile = `pdfyz_${Date.now()}_${part.filename}`;
+        console.log(part.filename);
+        const safeFile = `${part.filename}`;
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
       } else {

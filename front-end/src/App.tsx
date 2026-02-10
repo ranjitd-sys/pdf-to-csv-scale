@@ -281,7 +281,7 @@ export default function ZipMorph() {
                   <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center mb-4 animate-pulse">
                     <div className="w-8 h-8 bg-black rounded-full" />
                   </div>
-                  <p className="text-[10px] font-bold uppercase max-w-[200px] leading-relaxed">
+                  <p className="text-[10px] font-bold uppercase max-w-50 leading-relaxed">
                     Optimized for structural integrity. No manual overrides
                     permitted in Standard Mode.
                   </p>
