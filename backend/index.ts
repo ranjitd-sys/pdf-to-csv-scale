@@ -1,37 +1,49 @@
-import Fastify from 'fastify';
-import multipart from '@fastify/multipart';
-import { createWriteStream } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
-import { pipeline } from 'node:stream/promises';
-import path from 'node:path';
-
+import Fastify from "fastify";
+import multipart from "@fastify/multipart";
+import { createWriteStream } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import { pipeline } from "node:stream/promises";
+import path from "node:path";
+import cors from "@fastify/cors";
 const fastify = Fastify({
-    logger:true
+  logger: true,
 });
 
 fastify.register(multipart, {
-    limits:{
-        fileSize: 100 * 1024 * 1024
-    }
+  limits: {
+    fileSize: 100 * 1024 * 1024,
+  },
 });
-const UPLOAD_DIR = './uploads';
+fastify.register(cors, {
+  origin: true,
+});
+const UPLOAD_DIR = "./uploads";
 await mkdir(UPLOAD_DIR, { recursive: true });
 
-fastify.post('/upload', async(req, res)=>{
-    const options : Record<string,string>  = {};
-    let filePath = '';
+fastify.post("/upload", async (req, res) => {
+  const options: Record<string, string> = {};
+  let filePath = "";
+  try {
     const parts = req.parts();
-    for await (const part of parts){
-        if(part.type === "file"){
-            console.log(part);
-            const safeFile = `pdfyz_${Date.now()}_${part.filename}`
-            const filePath = path.join();
-            await pipeline(part.file, createWriteStream(filePath))
-        }
-        else{
-            options[part.fieldname] = part.value as string;
-        }
+    for await (const part of parts) {
+      if (part.type === "file") {
+        console.log(part);
+        const safeFile = `pdfyz_${Date.now()}_${part.filename}`;
+        filePath = path.join(UPLOAD_DIR, safeFile);
+        await pipeline(part.file, createWriteStream(filePath));
+      } else {
+        options[part.fieldname] = part.value as string;
+      }
     }
+    return {
+      status: "SUCCESS",
+      message: "Archive received by XYZ Engine",
+      processedParams: options,
+    };
+  } catch (e) {
+    res.status(500).send({ status: "ERROR", message: "Pipeline failure" });
+    console.log(e);
+  }
 });
 
 try {
