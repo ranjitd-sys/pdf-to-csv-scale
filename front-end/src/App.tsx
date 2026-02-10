@@ -1,24 +1,23 @@
 import React, { useState, type ChangeEvent, type DragEvent } from 'react';
-import { Upload, FileArchive, ArrowRight, FileSpreadsheet, FileText, X, Terminal, Lock, Code2, CheckCircle2 } from 'lucide-react';
-
+import { Upload, FileArchive, ArrowRight, FileSpreadsheet, FileText, X, Terminal, Lock, Code2, Activity, Cpu, Shield, Globe } from 'lucide-react';
+import "./index.css"
 type TargetFormat = 'PDF' | 'CSV';
 type ParamMode = 'fixed' | 'custom';
 
-// 1. Define the Standard XYZ Schema Example
-const FIXED_STANDARD_SCHEMA = {
-  version: "2.6.0-stable",
-  engine: "XYZ-Morph-Core",
-  logic: {
-    recursion: "flatten_all",
-    filtering: ["*.json", "*.xml", "*.csv", "*.txt"],
-    conflict_resolution: "append_timestamp",
-    encoding: "UTF-8"
-  },
-  output: {
-    compression: false,
-    generate_checksum: true
-  }
-};
+// 1. Define the List of Standard Parameters
+interface SystemParam {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  status: 'ACTIVE' | 'ENFORCED';
+}
+
+const FIXED_PARAMS: SystemParam[] = [
+  { label: 'Heuristic Mapping', value: 'XYZ-DeepScan v4', icon: <Cpu size={14} />, status: 'ACTIVE' },
+  { label: 'Recursion Depth', value: 'Infinite (Flatten)', icon: <Activity size={14} />, status: 'ENFORCED' },
+  { label: 'Security Protocol', value: 'SHA-256 In-Memory', icon: <Shield size={14} />, status: 'ACTIVE' },
+  { label: 'Character Encoding', value: 'UTF-8 / Unicode', icon: <Globe size={14} />, status: 'ENFORCED' },
+];
 
 export default function ZipMorph() {
   const [targetType, setTargetType] = useState<TargetFormat>('PDF');
@@ -47,9 +46,8 @@ export default function ZipMorph() {
   };
 
   return (
-    <div className="min-h-screen bg-white min-w-100 text-black font-mono selection:bg-black selection:text-white">
-      {/* Navigation */}
-      <nav className="border-b border-black p-6 flex justify-between items-center">
+    <div className="min-h-screen bg-white min-w-[90vw] text-black font-mono selection:bg-black selection:text-white">
+      <nav className="border-b border-black p-6 flex justify-between items-center w-full">
         <h1 className="text-xl font-bold tracking-tighter uppercase italic">ZipMorph_v2.6</h1>
         <div className="flex gap-6 text-xs uppercase font-bold text-gray-400">
           <span className="text-black">BY DeepEcom</span>
@@ -57,7 +55,7 @@ export default function ZipMorph() {
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-20">
+      <main className="max-w-6xl mx-auto px-6 py-20">
         <section className="mb-20">
           <h2 className="text-7xl font-bold tracking-tighter leading-none mb-6">
             ZIP TO <br />
@@ -78,7 +76,7 @@ export default function ZipMorph() {
             {!file ? (
               <>
                 <Upload size={48} strokeWidth={1.5} className="mb-4" />
-                <p className="text-xs uppercase font-bold tracking-widest">Drop .ZIP file to initialize</p>
+                <p className="text-xs uppercase font-bold tracking-widest">Drop .ZIP archive to initialize</p>
                 <input type="file" className="hidden" id="fileInput" accept=".zip" onChange={handleFileChange} />
                 <label htmlFor="fileInput" className="mt-4 text-[10px] underline cursor-pointer hover:font-bold uppercase">OR BROWSE FILES</label>
               </>
@@ -86,7 +84,7 @@ export default function ZipMorph() {
               <div className="flex flex-col items-center animate-in zoom-in-95 duration-200">
                 <FileArchive size={48} className="mb-4 text-black" />
                 <p className="text-sm font-bold uppercase mb-1">{file.name}</p>
-                <p className="text-[10px] text-gray-400 mb-6 uppercase">{(file.size / 1024 / 1024).toFixed(2)} MB • READY</p>
+                <p className="text-[10px] text-gray-400 mb-6 uppercase">{(file.size / 1024 / 1024).toFixed(2)} MB • VERIFIED</p>
                 <button onClick={() => setFile(null)} className="flex items-center gap-2 text-[10px] border border-black px-3 py-2 hover:bg-black hover:text-white transition-all uppercase font-bold">
                   <X size={12} /> Clear Selection
                 </button>
@@ -97,7 +95,7 @@ export default function ZipMorph() {
           {/* Configuration Grid */}
           <div className="grid md:grid-cols-2">
             <div className="p-8 border-r-0 md:border-r-2 border-b-2 md:border-b-0 border-black">
-              <label className="text-[10px] font-bold uppercase block mb-4">Output Format</label>
+              <label className="text-[10px] font-bold uppercase block mb-4 text-gray-400">Target Output</label>
               <div className="flex gap-4">
                 {(['PDF', 'CSV'] as TargetFormat[]).map((format) => (
                   <button 
@@ -115,53 +113,61 @@ export default function ZipMorph() {
             </div>
 
             <div className="p-8">
-              <label className="text-[10px] font-bold uppercase block mb-4">Parameter Logic</label>
+              <label className="text-[10px] font-bold uppercase block mb-4 text-gray-400">Processing Mode</label>
               <div className="space-y-3">
                 <button onClick={() => setParamMode('fixed')} className="w-full flex justify-between items-center group">
                   <span className={`text-xs uppercase ${paramMode === 'fixed' ? 'font-bold underline' : ''}`}>Fixed (Standard)</span>
                   <div className={`w-3 h-3 border border-black rounded-full ${paramMode === 'fixed' ? 'bg-black' : ''}`} />
                 </button>
                 <button onClick={() => setParamMode('custom')} className="w-full flex justify-between items-center group">
-                  <span className={`text-xs uppercase ${paramMode === 'custom' ? 'font-bold underline' : ''}`}>Custom (Schema Definition)</span>
+                  <span className={`text-xs uppercase ${paramMode === 'custom' ? 'font-bold underline' : ''}`}>Custom (Schema)</span>
                   <div className={`w-3 h-3 border border-black rounded-full ${paramMode === 'custom' ? 'bg-black' : ''}`} />
                 </button>
               </div>
             </div>
           </div>
 
-          {/* PARAMETER DISPLAY AREA */}
-          <div className="border-t-2 border-black bg-gray-50 flex flex-col md:flex-row animate-in fade-in slide-in-from-top-4 duration-300">
+          {/* DYNAMIC PARAMETER AREA */}
+          <div className="border-t-2 border-black bg-white flex flex-col md:flex-row animate-in fade-in slide-in-from-top-4 duration-300">
             {paramMode === 'fixed' ? (
-              /* FIXED VIEW */
-              <>
-                <div className="flex-1 p-8 border-r-0 md:border-r-2 border-b-2 md:border-b-0 border-black overflow-hidden">
-                  <div className="flex items-center gap-2 mb-4 text-gray-400">
-                    <Lock size={14} />
-                    <label className="text-[10px] font-bold uppercase">System Manifest (Read-Only)</label>
+              /* FIXED LIST VIEW */
+              <div className="flex-1 grid md:grid-cols-2 divide-x-0 md:divide-x-2 divide-y-2 md:divide-y-0 divide-black">
+                <div className="p-8 bg-gray-50">
+                   <div className="flex items-center gap-2 mb-6">
+                    <Lock size={14} className="text-gray-400" />
+                    <label className="text-[10px] font-bold uppercase">Standard Engine Config</label>
                   </div>
-                  <pre className="text-[11px] leading-relaxed text-gray-500 bg-white border border-gray-200 p-6 rounded-sm overflow-x-auto">
-                    {JSON.stringify(FIXED_STANDARD_SCHEMA, null, 2)}
-                  </pre>
-                </div>
-                <div className="md:w-64 p-8 flex flex-col justify-between bg-white">
-                  <div>
-                    <div className="flex items-center gap-2 mb-4 text-emerald-600">
-                      <CheckCircle2 size={14} />
-                      <label className="text-[10px] font-bold uppercase">Standard Verified</label>
-                    </div>
-                    <p className="text-[10px] uppercase leading-relaxed text-gray-400">
-                      Using XYZ Limited's optimized recursive flattening logic. Optimized for high-density archives.
-                    </p>
+                  <div className="space-y-4">
+                    {FIXED_PARAMS.map((param) => (
+                      <div key={param.label} className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-gray-400 uppercase">{param.label}</span>
+                          <span className="text-[9px] font-bold bg-black text-white px-1">{param.status}</span>
+                        </div>
+                        <div className="flex items-center gap-2 border-b border-black pb-2">
+                          {param.icon}
+                          <span className="text-xs font-bold uppercase">{param.value}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </>
+                <div className="p-8 flex flex-col justify-center items-center text-center">
+                   <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center mb-4 animate-pulse">
+                      <div className="w-8 h-8 bg-black rounded-full" />
+                   </div>
+                   <p className="text-[10px] font-bold uppercase max-w-[200px] leading-relaxed">
+                     Optimized for structural integrity. No manual overrides permitted in Standard Mode.
+                   </p>
+                </div>
+              </div>
             ) : (
-              /* CUSTOM VIEW */
+              /* CUSTOM TERMINAL VIEW */
               <>
-                <div className="flex-1 p-8 border-r-0 md:border-r-2 border-b-2 md:border-b-0 border-black">
+                <div className="flex-1 p-8 border-r-0 md:border-r-2 border-b-2 md:border-b-0 border-black bg-gray-50">
                   <div className="flex items-center gap-2 mb-4">
                     <Terminal size={14} />
-                    <label className="text-[10px] font-bold uppercase">Mapping Schema (JSON)</label>
+                    <label className="text-[10px] font-bold uppercase">Mapping Terminal (JSON)</label>
                   </div>
                   <textarea 
                     value={customSchema}
@@ -171,28 +177,26 @@ export default function ZipMorph() {
                   />
                 </div>
                 <div className="md:w-64 p-8 flex flex-col justify-between bg-white">
-                  <div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Code2 size={14} />
-                      <label className="text-[10px] font-bold uppercase">Schema Tokens</label>
+                    <div>
+                      <div className="flex items-center gap-2 mb-4 text-gray-400">
+                        <Code2 size={14} />
+                        <label className="text-[10px] font-bold uppercase">Schema Logic</label>
+                      </div>
+                      <p className="text-[10px] uppercase leading-relaxed text-gray-400">
+                        Input custom JSON to override the XYZ Limited default heuristic engine.
+                      </p>
                     </div>
-                    <ul className="text-[10px] font-bold space-y-2 uppercase">
-                      <li className="flex justify-between border-b border-gray-100 pb-1"><span>$depth</span> <span className="text-gray-300">INT</span></li>
-                      <li className="flex justify-between border-b border-gray-100 pb-1"><span>$filter</span> <span className="text-gray-300">STR[]</span></li>
-                    </ul>
-                  </div>
                 </div>
               </>
             )}
           </div>
           
-          {/* Execute Action */}
           <button 
             disabled={!file}
             className={`w-full py-8 flex items-center justify-center gap-4 group border-t-2 border-black transition-all ${
               !file 
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-black text-white hover:bg-white hover:text-black hover:tracking-widest'
+                : 'bg-black text-white hover:bg-white hover:text-black hover:tracking-[0.3em]'
             }`}
           >
             <span className="text-sm font-bold uppercase tracking-[0.2em]">
@@ -202,6 +206,17 @@ export default function ZipMorph() {
           </button>
         </div>
       </main>
+
+      <footer className="max-w-4xl mx-auto px-6 py-12 border-t border-gray-200 flex flex-col md:flex-row justify-between gap-8 opacity-50">
+        <div className="text-[10px] uppercase space-y-2">
+          <p className="font-bold">Security Protocol</p>
+          <p>Local-only processing. XYZ Hardware verification enabled.</p>
+        </div>
+        <div className="text-[10px] uppercase space-y-2 text-right">
+          <p className="font-bold text-black">Status: Systems Nominal</p>
+          <p>© 2026 DeepEcom Limited.</p>
+        </div>
+      </footer>
     </div>
   );
 }
