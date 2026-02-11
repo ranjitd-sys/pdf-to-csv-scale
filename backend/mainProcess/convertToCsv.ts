@@ -2,6 +2,7 @@ import { stringify } from "csv-stringify/sync";
 import { Effect } from "effect";
 import { writeFile } from "fs/promises";
 import { Process } from "./process";
+import { execPath } from "process";
 
 export async function convertToCSV(data: any[]) {
    const outputDir = "../output";
@@ -24,5 +25,7 @@ export async function convertToCSV(data: any[]) {
   console.log("CSV created ✅");
 }
 
-const data = await Effect.runPromise(Process);
-convertToCSV(data)
+export const getCSV = async() =>{
+  const data = await Effect.runPromise(Process);
+  convertToCSV(data)
+}

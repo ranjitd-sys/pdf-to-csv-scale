@@ -37,4 +37,3 @@ export const Process = Effect.gen(function* () {
   console.log(CreditNoteCount);
   return allData;
 });
-const res = await Effect.runPromise(Process);
