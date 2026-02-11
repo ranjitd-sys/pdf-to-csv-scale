@@ -1,8 +1,9 @@
 import { extractText } from "unpdf";
-import { getShaparateData } from "./mainProcess/saparator";
+import { extractCreditNote } from "./mainProcess/creaditNoteParser";
+import { extractDocument } from "./mainProcess/taxInvoiceParser";
 
 
-const file = Bun.file("ctest.pdf");
+const file = Bun.file("test.pdf");
 const content = await file.arrayBuffer();
 const text = await extractText(content);
 
@@ -13,5 +14,6 @@ function normalize(text: string) {
     .trim();
 }
 const res = normalize(text.text.join(""));
-console.log(getShaparateData(res));
+console.log(extractDocument(res))
+
 // console.log(res)
