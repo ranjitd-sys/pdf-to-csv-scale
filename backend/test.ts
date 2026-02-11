@@ -14,6 +14,6 @@ function normalize(text: string) {
     .trim();
 }
 const res = normalize(text.text.join(""));
-console.log(extractDocument(res))
+console.log(extractCreditNote(res))
 
 // console.log(res)

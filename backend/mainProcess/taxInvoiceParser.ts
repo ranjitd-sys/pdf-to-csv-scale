@@ -1,5 +1,7 @@
 // documentParser.ts
 
+import { extractIndianState } from "./state";
+
 export function extractDocument(text: string) {
   const clean = text.replace(/\r/g, "").trim();
 
@@ -59,7 +61,7 @@ export function extractDocument(text: string) {
       return {
         name: null,
         address_line: null,
-        city: null,
+       
         state: null,
         pincode: null,
       };
@@ -82,8 +84,8 @@ export function extractDocument(text: string) {
     if (stateLine) {
       const match = stateLine.match(/(.+?),?\s*([^,]+)\s*(\d{6})/);
       if (match) {
-        city = match[1]?.trim() || null;
-        state = match[2]?.trim() || null;
+        
+        state = extractIndianState(text)
         pincode = match[3] || null;
       }
     }

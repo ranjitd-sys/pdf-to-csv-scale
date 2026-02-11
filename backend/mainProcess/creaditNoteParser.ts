@@ -1,5 +1,7 @@
 // creditNoteParser.ts
 
+import { extractIndianState } from "./state";
+
 export function extractCreditNote(text: string) {
   const clean = text.replace(/\r/g, "").trim();
 
@@ -67,7 +69,7 @@ export function extractCreditNote(text: string) {
       const match = stateLine.match(/(.+?),\s*([^,]+),\s*(\d{6})/);
       if (match) {
         city = match[1]?.trim()||"";
-        state = match[2]?.trim() || "";
+        state = extractIndianState(text)
         pincode = match[3] || "";
       }
     }
