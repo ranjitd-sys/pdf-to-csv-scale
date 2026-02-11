@@ -80,7 +80,7 @@ export function extractCreditNote(text: string) {
 
     return {
       name,
-      address_line: addressLines.join(" ") || null,
+      address: addressLines.join(" ") || null,
       city,
       state,
       pincode
@@ -190,9 +190,9 @@ export function extractCreditNote(text: string) {
       gstin,
     
 
-    bill_to: parseIndianAddress(billToSection),
+    ...parseIndianAddress(billToSection),
 
-    ship_to: parseIndianAddress(shipToSection),
+    ...parseIndianAddress(shipToSection),
 
    
       description,

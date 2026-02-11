@@ -3,7 +3,7 @@ import { extractCreditNote } from "./mainProcess/creaditNoteParser";
 import { parseDocument } from "./mainProcess/taxInvoiceParser";
 
 
-const file = Bun.file("test.pdf");
+const file = Bun.file("ctest.pdf");
 const content = await file.arrayBuffer();
 const text = await extractText(content);
 
@@ -14,6 +14,6 @@ function normalize(text: string) {
     .trim();
 }
 const res = normalize(text.text.join(""));
-console.log(parseDocument(res))
+console.log(extractCreditNote(res))
 
 // console.log(res)

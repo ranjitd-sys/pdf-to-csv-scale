@@ -133,9 +133,9 @@ export function parseDocument(text: string) {
     ...parseIndianAddress(soldBySection || ""),
     gstin,
 
-    bill_to: parseIndianAddress(billToSection || ""),
+    ...parseIndianAddress(billToSection || ""),
 
-    ship_to: parseIndianAddress(shipToSection || ""),
+    ...parseIndianAddress(shipToSection || ""),
 
     description,
     hsn,

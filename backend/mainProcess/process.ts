@@ -26,6 +26,7 @@ export const Process = Effect.gen(function* () {
        
         CreditNoteCount++;
       } else {
+        
         const res = parseDocument(data);
         allData.push(res);
         TaxInvoiceCount++;
@@ -37,4 +38,3 @@ export const Process = Effect.gen(function* () {
   return allData;
 });
 const res = await Effect.runPromise(Process);
-console.log(res)
