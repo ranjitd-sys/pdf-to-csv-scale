@@ -91,9 +91,7 @@ export default function ZipMorph() {
     formData.append("targetType", targetType); // Fixed typo from tragetType
     formData.append("paramMode", paramMode);
     
-    if (paramMode === "custom" && customSchema) {
-      formData.append("customSchema", customSchema);
-    }
+    
 
     try {
       const response = await fetch("http://localhost:8080/upload", {

@@ -2,7 +2,7 @@
 
 import { extractIndianState } from "./state";
 
-export function extractCreditNote(text: string) {
+export const  extractCreditNote = (text: string) => {
   const clean = text.replace(/\r/g, "").trim();
 
   // ======================================
