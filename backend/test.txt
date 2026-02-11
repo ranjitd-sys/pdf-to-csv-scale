@@ -1,28 +1,32 @@
-test.ts
 Terms & Conditions:
 Tax is not payable on reverse charge basis
 This is a computer generated invoice and does not require signature
 Includes discounts for your city, limited returns and/or for online payments (as applicable)
 Original For Recipient
+
 Credit Note
 Order Number: 160619527489542144
 Order Date: 01-06-2025 10:54:39
 Credit Note No: dyq4z26C91
 Credit Note Date: 01-06-2025 10:55:29
 Invoice No and Date: dyq4z26524 01-06-2025 10:54:39
+
 SOLD BY:
 SRI SAKTHI AROMATIC
 Chennai, Tamil Nadu, 600052
 GSTIN : 33AEOFS1385J1ZM
+
 BILL TO:
 Selvam
 Vellore, Tamil Nadu, 632010
 Place of Supply : 33 Tamil Nadu
+
 SHIP TO:
 Nithiyanatham Valli
 324 matha vedu, anna nagar 2 street ,
 vellore, Tamil Nadu, 632010
 SN. Description HSN Qty. Gross
+
 Amount
 Discount Taxable
 Value

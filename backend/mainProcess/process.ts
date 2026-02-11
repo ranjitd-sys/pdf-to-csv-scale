@@ -3,6 +3,7 @@ import { readdir } from "fs/promises";
 import { join, normalize } from "path";
 import { extractText } from "unpdf";
 import { parseInvoiceBlock } from "./match";
+import { getShaparateData } from "./saparator";
 const folderPath = "./out";
 
 export const Process = Effect.gen(function* () {
@@ -17,12 +18,9 @@ export const Process = Effect.gen(function* () {
     const data = yield* Effect.promise(() => Bun.file(filePath).arrayBuffer());
 
     const rawBytes = yield* Effect.promise(() => extractText(data));
-    const first = rawBytes.text.map(normalize).map(parseInvoiceBlock).flatMap(data => data);
-    allPdfContent.push(first)
-    
+    const first = rawBytes.text.map(getShaparateData);
+    console.log(first)
   }
-  const result = allPdfContent.flatMap(data => data);
-  return result;
 });
 const res = await Effect.runPromise(Process);
 console.log(res)

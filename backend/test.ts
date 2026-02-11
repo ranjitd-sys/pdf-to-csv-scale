@@ -1,7 +1,8 @@
 import { extractText } from "unpdf";
-import { parseInvoiceBlock } from "./mainProcess/match";
+import { getShaparateData } from "./mainProcess/saparator";
 
-const file = Bun.file("test.pdf");
+
+const file = Bun.file("ctest.pdf");
 const content = await file.arrayBuffer();
 const text = await extractText(content);
 
@@ -11,7 +12,6 @@ function normalize(text: string) {
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
-const res = normalize(text.text.join('\n'));
-console.log(res)
-const data = parseInvoiceBlock(res);
-console.log(data)
+const res = normalize(text.text.join(""));
+console.log(getShaparateData(res));
+// console.log(res)
