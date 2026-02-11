@@ -3,6 +3,7 @@ import { readdir } from "fs/promises";
 import { join, normalize } from "path";
 import { extractText } from "unpdf";
 import { extractCreditNote } from "./creaditNoteParser";
+import { separateCreditNote } from "./shaprator";
 
 const folderPath = "./out";
 
@@ -21,7 +22,8 @@ export const Process = Effect.gen(function* () {
     const rawBytes = yield* Effect.promise(() => extractText(data));
     const first = rawBytes.text.map((data) => {
       if (data.includes("Credit Note")) {
-        const res = extractCreditNote(data);
+        const res = separateCreditNote(data);
+        
         allData.push(res);
         CreditNoteCount++;
       } else {
