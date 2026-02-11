@@ -7,7 +7,7 @@ import path from "node:path";
 import cors from "@fastify/cors";
 import { $ } from "bun";
 import { convertToCSV, getCSV } from "./mainProcess/convertToCsv";
-import { Effect } from "effect";
+import fs from "fs";
 const fastify = Fastify({
   logger: true,
 });
@@ -35,7 +35,7 @@ fastify.post("/upload", async (req, res) => {
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
         const allPdfData = await getCSV();
-        console.log(allPdfData) 
+        console.log(allPdfData);
         return {
           status: "SUCCESS",
           message: "Data Parse Sussessfully",
@@ -56,6 +56,12 @@ fastify.post("/upload", async (req, res) => {
   }
 });
 
+fastify.get("/download", async (req, reply) => {
+  const filePath = path.join(__dirname, "../output/output.csv");
+  reply.header("Content-Disposition", "attachment; filename=output.csv");
+  reply.type("application/csv");
+  return reply.send(fs.createReadStream(filePath));
+});
 try {
   await fastify.listen({ port: 8080 });
   console.log("⚡ XYZ Engine: Fastify/Multipart Online");

@@ -67,6 +67,21 @@ export default function ZipMorph() {
   const [file, setFile] = useState<File | null>(null);
   const [customSchema, setCustomSchema] = useState<string>("");
 
+  async function downloadFile() {
+  const response = await fetch("http://localhost:8080/download");
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "sample.csv";
+  document.body.appendChild(a);
+  a.click();
+
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
   const handleExecute = async () => {
     if (!file) return;
     setStatus("UPLOADING");
@@ -212,7 +227,7 @@ export default function ZipMorph() {
                     Target Output
                   </label>
                   <div className="flex gap-4">
-                    {(["PDF", "CSV"] as TargetFormat[]).map((format) => (
+                    {(["CSV"] as TargetFormat[]).map((format) => (
                       <button
                         key={format}
                         onClick={() => setTargetType(format)}
@@ -223,14 +238,10 @@ export default function ZipMorph() {
                             : "hover:bg-gray-100"
                         }`}
                       >
-                        {format === "PDF" ? (
+                        {format === "CSV" ? (
                           <FileText size={16} />
-                        ) : (
-                          <FileSpreadsheet size={16} />
-                        )}
-                        <span className="text-xs font-bold uppercase">
-                          {format}
-                        </span>
+                        ) : null}
+                       
                       </button>
                     ))}
                   </div>
@@ -259,24 +270,7 @@ export default function ZipMorph() {
                         }`}
                       />
                     </button>
-                    <button
-                      onClick={() => setParamMode("custom")}
-                      disabled={status === "UPLOADING"}
-                      className="w-full flex justify-between items-center group"
-                    >
-                      <span
-                        className={`text-xs uppercase ${
-                          paramMode === "custom" ? "font-bold underline" : ""
-                        }`}
-                      >
-                        Custom (Schema)
-                      </span>
-                      <div
-                        className={`w-3 h-3 border border-black rounded-full ${
-                          paramMode === "custom" ? "bg-black" : ""
-                        }`}
-                      />
-                    </button>
+                    
                   </div>
                 </div>
               </div>
@@ -328,21 +322,7 @@ export default function ZipMorph() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex-1 p-8 border-r-0 md:border-r-2 border-b-2 md:border-b-0 border-black bg-gray-50">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Terminal size={14} />
-                        <label className="text-[10px] font-bold uppercase">
-                          Mapping Terminal (JSON)
-                        </label>
-                      </div>
-                      <textarea
-                        value={customSchema}
-                        onChange={(e) => setCustomSchema(e.target.value)}
-                        disabled={status === "UPLOADING"}
-                        placeholder={`{\n  "mapping": "custom",\n  "depth": 5\n}`}
-                        className="w-full h-48 bg-white border-2 border-black p-4 text-xs font-mono focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all resize-none"
-                      />
-                    </div>
+
                     <div className="md:w-64 p-8 flex flex-col justify-between bg-white">
                       <div>
                         <div className="flex items-center gap-2 mb-4 text-gray-400">
@@ -429,7 +409,7 @@ export default function ZipMorph() {
                 >
                   <RefreshCcw size={14} /> Start New
                 </button>
-                <button className="flex-2 py-4 bg-black text-white flex items-center justify-center gap-2 hover:tracking-widest transition-all uppercase font-bold text-xs">
+                <button onClick={downloadFile} className="flex-2 py-4 bg-black text-white flex items-center justify-center gap-2 hover:tracking-widest transition-all uppercase font-bold text-xs">
                   <Download size={14} /> Download {targetType}
                 </button>
               </div>

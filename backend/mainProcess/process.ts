@@ -33,7 +33,7 @@ export const Process = Effect.gen(function* () {
       }
     });
   }
-  console.log(TaxInvoiceCount);
-  console.log(CreditNoteCount);
+  console.log("Tax Invoice ",TaxInvoiceCount);
+  console.log("Credit Note",CreditNoteCount);
   return allData;
 });

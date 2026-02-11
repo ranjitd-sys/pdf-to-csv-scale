@@ -1,17 +1,15 @@
 import { stringify } from "csv-stringify/sync";
 import { Effect } from "effect";
-import { writeFile } from "fs/promises";
+import { rm } from "fs/promises";
 import { Process } from "./process";
-import { execPath } from "process";
-
 export async function convertToCSV(data: any[]) {
-   const outputDir = "../output";
+  const outputDir = "../output";
   const filePath = `${outputDir}/output.csv`;
   if (!data.length) {
     throw new Error("Array is empty");
   }
 
-  const cleaned = data.map(item => ({
+  const cleaned = data.map((item) => ({
     ...item,
     description: item.description?.replace(/\n/g, " ").trim(),
   }));
@@ -21,11 +19,14 @@ export async function convertToCSV(data: any[]) {
     columns: Object.keys(cleaned[0]), // keeps consistent order
   });
 
-   await Bun.write(filePath, csv);
+  await Bun.write(filePath, csv);
+
   console.log("CSV created ✅");
 }
 
-export const getCSV = async() =>{
+export const getCSV = async () => {
   const data = await Effect.runPromise(Process);
-  convertToCSV(data)
-}
+  await convertToCSV(data);
+
+  await rm("./out", { recursive: true, force: true });
+};

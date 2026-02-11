@@ -1,19 +1,2 @@
-import { extractText } from "unpdf";
-import { extractCreditNote } from "./mainProcess/creaditNoteParser";
-import { parseDocument } from "./mainProcess/taxInvoiceParser";
+import { rm } from "fs/promises";
 
-
-const file = Bun.file("ctest.pdf");
-const content = await file.arrayBuffer();
-const text = await extractText(content);
-
-function normalize(text: string) {
-  return text
-    .replace(/\r/g, "")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
-}
-const res = normalize(text.text.join(""));
-console.log(extractCreditNote(res))
-
-// console.log(res)
