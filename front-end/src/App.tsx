@@ -239,9 +239,13 @@ export default function ZipMorph() {
                         }`}
                       >
                         {format === "CSV" ? (
-                          <FileText size={16} />
+                          <div className="flex gap-2 justify-center items-center">
+                          
+                            <FileSpreadsheet size={16} />
+                          </div>
+                          
                         ) : null}
-                       
+                  
                       </button>
                     ))}
                   </div>
