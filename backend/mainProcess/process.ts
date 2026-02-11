@@ -9,7 +9,7 @@ const folderPath = "./out";
 export const Process = Effect.gen(function* () {
   let TaxInvoiceCount = 0;
   let CreditNoteCount = 0;
-
+  let allData :any[] = [];
   const files = yield* Effect.promise(() => readdir(folderPath));
   const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
 
@@ -19,24 +19,22 @@ export const Process = Effect.gen(function* () {
     const data = yield* Effect.promise(() => Bun.file(filePath).arrayBuffer());
 
     const rawBytes = yield* Effect.promise(() => extractText(data));
-    const first = rawBytes.text.map(data => {
-      if(data.includes("Credit Note")){
-    
+    const first = rawBytes.text.map((data) => {
+      if (data.includes("Credit Note")) {
         const res = extractCreditNote(data);
-        console.log(res)
-        CreditNoteCount ++;
-        
-      }
-      else{
-      
+        allData.push(res);
+       
+        CreditNoteCount++;
+      } else {
         const res = parseDocument(data);
-        console.log(res)
-        TaxInvoiceCount++
+        allData.push(res);
+        TaxInvoiceCount++;
       }
     });
   }
   console.log(TaxInvoiceCount);
-  console.log(CreditNoteCount)
+  console.log(CreditNoteCount);
+  return allData;
 });
 const res = await Effect.runPromise(Process);
-
+console.log(res)
