@@ -170,34 +170,34 @@ export function extractCreditNote(text: string) {
   return {
     document_type: "credit_note",
 
-    credit_note: {
-      number: creditNoteNo,
-      date: creditNoteDate
-    },
+    
+      CreditNumber: creditNoteNo,
+      CreditDate: creditNoteDate,
+    
 
-    order: {
+  
       order_number: orderNumber,
-      order_date: orderDate
-    },
+      order_date: orderDate,
+  
 
-    invoice: {
+   
       invoice_number: invoiceNumber,
-      invoice_date: invoiceDate
-    },
+      invoice_date: invoiceDate,
+    
 
-    sold_by: {
+    
       ...parseIndianAddress(soldBySection),
-      gstin
-    },
+      gstin,
+    
 
     bill_to: parseIndianAddress(billToSection),
 
     ship_to: parseIndianAddress(shipToSection),
 
-    product: {
+   
       description,
-      ...pricing
-    },
+      ...pricing,
+    
 
     extracted_at: new Date().toISOString()
   };

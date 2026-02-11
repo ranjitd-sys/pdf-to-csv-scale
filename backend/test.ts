@@ -1,6 +1,6 @@
 import { extractText } from "unpdf";
 import { extractCreditNote } from "./mainProcess/creaditNoteParser";
-import { extractDocument } from "./mainProcess/taxInvoiceParser";
+import { parseDocument } from "./mainProcess/taxInvoiceParser";
 
 
 const file = Bun.file("test.pdf");
@@ -14,6 +14,6 @@ function normalize(text: string) {
     .trim();
 }
 const res = normalize(text.text.join(""));
-console.log(extractCreditNote(res))
+console.log(parseDocument(res))
 
 // console.log(res)
