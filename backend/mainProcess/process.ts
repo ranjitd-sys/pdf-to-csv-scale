@@ -3,7 +3,7 @@ import { readdir } from "fs/promises";
 import { join, normalize } from "path";
 import { extractText } from "unpdf";
 import { extractCreditNote } from "./creaditNoteParser";
-import { parseDocument } from "./taxInvoiceParser";
+
 const folderPath = "./out";
 
 export const Process = Effect.gen(function* () {
@@ -23,13 +23,9 @@ export const Process = Effect.gen(function* () {
       if (data.includes("Credit Note")) {
         const res = extractCreditNote(data);
         allData.push(res);
-       
         CreditNoteCount++;
       } else {
-        
-        const res = parseDocument(data);
-        allData.push(res);
-        TaxInvoiceCount++;
+        return
       }
     });
   }
@@ -37,3 +33,5 @@ export const Process = Effect.gen(function* () {
   console.log("Credit Note",CreditNoteCount);
   return allData;
 });
+const response = await Effect.runPromise(Process);
+response.map(data => console.log(data))

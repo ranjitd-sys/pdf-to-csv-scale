@@ -26,7 +26,8 @@ export async function convertToCSV(data: any[]) {
 
 export const getCSV = async () => {
   const data = await Effect.runPromise(Process);
-  await convertToCSV(data);
-
-  await rm("./out", { recursive: true, force: true });
+  const response = await convertToCSV(data);
+  console.log(response)
+  // await rm("./out", { recursive: true, force: true });
 };
+getCSV()
