@@ -22,9 +22,9 @@ export const Process = Effect.gen(function* () {
     const data = yield* Effect.promise(() => Bun.file(filePath).arrayBuffer());
 
     const rawBytes = yield* Effect.promise(() => extractText(data));
-    const credit = rawBytes.text.map((data) => {
+    rawBytes.text.map((data) => {
       if (data.includes("Credit Note")) {
-        return;
+        
         const res = separateCreditNote(data);
         const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
         const Sold = extractSoldBy(res.sold_by|| "");
@@ -32,8 +32,7 @@ export const Process = Effect.gen(function* () {
         const Ship = extractShipTo(res.ship_to || "");
         const Product = ExtractProduct(res.product || "");
         const tax  = parseTaxSection(res.taxes || "")
-        console.log(res.taxes)
-         console.log(tax);
+        
         const TotalCreditNotes = {
           ...Credit_Note,
           ...Sold,
@@ -50,7 +49,7 @@ export const Process = Effect.gen(function* () {
         CreditNoteCount++;
       } else {
      
-        const Invoice = rawBytes.text.map(data => {
+        rawBytes.text.map(data => {
           const res = separateTaxInvoice(data);
           const bill = extractInvoice(res.Bill_detail || "");
           const shipInfo = invoiceExtractShip(res.ship_to || "");
@@ -69,7 +68,7 @@ export const Process = Effect.gen(function* () {
           }
           
           TaxInvoice.push(Invoices);
-          console.log(Invoices)
+          // console.log(Invoices)
           // console.log(res.sold_by)
         })
         TaxInvoiceCount++;
@@ -81,4 +80,4 @@ export const Process = Effect.gen(function* () {
   console.log("Credit Note",CreditNoteCount);
   return {CrediNotes,TaxInvoice};
 });
-const response = await Effect.runPromise(Process);
+

@@ -15,6 +15,7 @@
     "@fastify/multipart": "^9.4.0",
     "csv-stringify": "^6.6.0",
     "effect": "^3.19.16",
+    "exceljs": "^4.4.0",
     "fastify": "^5.7.4",
     "unpdf": "^1.4.0"
   }
