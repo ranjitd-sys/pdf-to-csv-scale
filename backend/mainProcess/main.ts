@@ -4,7 +4,7 @@ import { join, normalize } from "path";
 import { extractText } from "unpdf";
 import { parseCreditNoteMeta, extractSoldBy, extractBillTo, extractShipTo, ExtractProduct, parseTaxSection } from "./creaditNoteParser";
 import { separateCreditNote, separateTaxInvoice } from "./shaprator";
-import { extractInvoice } from "./taxInvoiceParser";
+import { extractInvoice, extractInvoiceDates, extractSellerDetails, InvoiceextractProduct, invoiceExtractShip } from "./taxInvoiceParser";
 
 const folderPath = "./out";
 
@@ -52,11 +52,22 @@ export const Process = Effect.gen(function* () {
      
         const Invoice = rawBytes.text.map(data => {
           const res = separateTaxInvoice(data);
-          const bill = extractInvoice(res.Bill_detail || "")
-          console.log(bill);
+          const bill = extractInvoice(res.Bill_detail || "");
+          const shipInfo = invoiceExtractShip(res.ship_to || "");
+          const product = InvoiceextractProduct(res.product || "");
+          const tax = parseTaxSection(res.taxes || "");
+          const seller = extractSellerDetails(res.sold_by || "");
+          const InvoiceDates = extractInvoiceDates(res.order || "")
           const Invoices = {
-            ...bill
+            ...bill,
+            ...shipInfo,
+            ...product,
+            ...seller,
+            ...tax,
+            ...InvoiceDates
           }
+          console.log(Invoices);
+          // console.log(res.sold_by)
         })
         TaxInvoiceCount++;
       }
