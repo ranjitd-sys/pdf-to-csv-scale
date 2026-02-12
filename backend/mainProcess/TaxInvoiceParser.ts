@@ -45,42 +45,50 @@ export function extractInvoice(text: string): InvoiceData | null {
 
 
 
+export function invoiceExtractShip(text: string): Ship | null {
+  const shipBlock = text.split("SHIP TO:")[1]
+  if (!shipBlock) return null
 
-export function invoiceExtractShip(text: string): Ship  {
-  const block = text.split("SHIP TO:")[1]
-  if (!block) return null
+  // Stop before product table
+  const cleanBlock = shipBlock.split("SN. Description")[0]
 
-  const lines = block
+  const lines = cleanBlock!
     .trim()
     .split("\n")
     .map(l => l.trim())
     .filter(Boolean)
 
-  const name = lines[0] || ""
-  const lastLine = lines[lines.length - 1] || ""
+  if (!lines.length) return null
 
-  const locationMatch = lastLine.match(
-    /([^,]+),\s*([^,]+),\s*(\d{6})/
-  )
+  const name = lines[0]
 
-  const city = locationMatch?.[1]?.trim() || ""
-  const state = locationMatch?.[2]?.trim() || ""
-  const pincode = locationMatch?.[3] || ""
+  // 🔍 Find pincode anywhere in block
+  const pincodeMatch = cleanBlock!.match(/\b\d{6}\b/)
+  const pincode = pincodeMatch?.[0] || ""
 
-  const address = lines
-    .slice(1, lines.length - 1)
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim()
+  // 🔍 Try extracting state (before pincode)
+  let state = ""
+  let city = ""
+
+  if (pincodeMatch) {
+    const beforePin = cleanBlock!.substring(0, pincodeMatch.index)
+    const parts = beforePin.split(",").map(p => p.trim()).filter(Boolean)
+
+    state = parts[parts.length - 1] || ""
+    city = parts[parts.length - 2] || ""
+  }
+
+  const address = lines.slice(1).join(" ")
 
   return {
-    ship_name: name,
+    ship_name: name || "",
     ship_address: address,
     ship_city: city,
     ship_state: state,
     ship_pincode: pincode,
   }
 }
+
 
 export function InvoiceextractProduct(text: string): Product {
   const clean = text.replace(/\r/g, "").trim()
