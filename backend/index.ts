@@ -6,8 +6,9 @@ import { pipeline } from "node:stream/promises";
 import path from "node:path";
 import cors from "@fastify/cors";
 import { $ } from "bun";
-import {  GetCsv } from "./mainProcess/CreditNoteCsv";
+
 import fs from "fs";
+import { GenerateExcel } from "./mainProcess/CSV";
 const fastify = Fastify({
   logger: true,
 });
@@ -34,8 +35,11 @@ fastify.post("/upload", async (req, res) => {
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        const allPdfData =  await GetCsv();
+        const allPdfData =  await GenerateExcel();
+
         console.log(allPdfData);
+        await Bun.$`rm -rvf out`
+
         return {
           status: "SUCCESS",
           message: "Data Parse Sussessfully",
@@ -57,9 +61,9 @@ fastify.post("/upload", async (req, res) => {
 });
 
 fastify.get("/download", async (req, reply) => {
-  const filePath = path.join(__dirname, "../output/output.csv");
-  reply.header("Content-Disposition", "attachment; filename=output.csv");
-  reply.type("application/csv");
+  const filePath = path.join(__dirname, "../output/output.xlsx");
+  reply.header("Content-Disposition", "attachment; filename=output.xlsx");
+  reply.type("application/xlsx");
   return reply.send(fs.createReadStream(filePath));
 });
 try {

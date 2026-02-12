@@ -75,7 +75,7 @@ export default function ZipMorph() {
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "sample.csv";
+  a.download = "sample.xlsx";
   document.body.appendChild(a);
   a.click();
 

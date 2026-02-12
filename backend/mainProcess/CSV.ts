@@ -157,10 +157,7 @@ export async function GenerateExcel() {
   // =====================================================
   // SAVE FILE
   // =====================================================
-  await workbook.xlsx.writeFile("../output/output.xlsx")
-
+  await workbook.xlsx.writeFile("../output/output.xlsx");
   console.log("Excel file generated successfully ✅")
 }
 
-// Run
-GenerateExcel()

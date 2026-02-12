@@ -6,9 +6,9 @@ import { parseCreditNoteMeta, extractSoldBy, extractBillTo, extractShipTo, Extra
 import { separateCreditNote, separateTaxInvoice } from "./shaprator";
 import { extractInvoice, extractInvoiceDates, extractSellerDetails, InvoiceextractProduct, invoiceExtractShip } from "./TaxInvoiceParser";
 
-const folderPath = "./out";
 
 export const Process = Effect.gen(function* () {
+  const folderPath = "./out";
   let TaxInvoiceCount = 0;
   let CreditNoteCount = 0;
   let CrediNotes :any[] = [];
