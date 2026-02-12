@@ -4,7 +4,7 @@ import { join, normalize } from "path";
 import { extractText } from "unpdf";
 import { parseCreditNoteMeta, extractSoldBy, extractBillTo, extractShipTo, ExtractProduct, parseTaxSection } from "./creaditNoteParser";
 import { separateCreditNote, separateTaxInvoice } from "./shaprator";
-import { extractInvoice, extractInvoiceDates, extractSellerDetails, InvoiceextractProduct, invoiceExtractShip } from "./taxInvoiceParser";
+import { extractInvoice, extractInvoiceDates, extractSellerDetails, InvoiceextractProduct, invoiceExtractShip } from "./TaxInvoiceParser";
 
 const folderPath = "./out";
 

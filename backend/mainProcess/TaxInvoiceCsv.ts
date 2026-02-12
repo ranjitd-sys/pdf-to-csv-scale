@@ -1,5 +1,7 @@
-import { Process } from "./main";
-import { Effect } from "effect";
+import { stringify } from "csv-stringify/sync"
+import { Effect } from "effect"
+import { writeFileSync } from "fs"
+import { Process } from "./main"
 function TaxInvoicesgenerateCSV(invoices: any[]) {
   const flattened = invoices.map((invoice) => ({
     order_number: invoice.order_number,
@@ -30,8 +32,13 @@ function TaxInvoicesgenerateCSV(invoices: any[]) {
 
     total_tax: invoice.total_tax,
     grand_total: invoice.grand_total,
-    
+
   }));
+  const csv = stringify(flattened, {
+    header: true,
+  })
+
+  writeFileSync("../output/output.csv", csv)
   console.log(flattened)
 }
 async function main(){
