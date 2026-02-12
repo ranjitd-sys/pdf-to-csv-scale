@@ -6,9 +6,9 @@ import { pipeline } from "node:stream/promises";
 import path from "node:path";
 import cors from "@fastify/cors";
 import { $ } from "bun";
-
+import { Effect } from "effect";
 import fs from "fs";
-import { GenerateExcel } from "./mainProcess/CSV";
+import { CSV } from "./mainProcess/CSV";
 const fastify = Fastify({
   logger: true,
 });
@@ -35,10 +35,9 @@ fastify.post("/upload", async (req, res) => {
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        const allPdfData =  await GenerateExcel();
+        const allPdfData =  await Effect.runPromise(CSV);
 
         console.log(allPdfData);
-        await Bun.$`rm -rvf out`
 
         return {
           status: "SUCCESS",

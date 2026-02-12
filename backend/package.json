@@ -10,9 +10,15 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@effect/opentelemetry": "^0.61.0",
     "@fastify/busboy": "^3.2.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/multipart": "^9.4.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.211.0",
+    "@opentelemetry/sdk-metrics": "^2.5.0",
+    "@opentelemetry/sdk-trace-base": "^2.5.0",
+    "@opentelemetry/sdk-trace-node": "^2.5.0",
+    "@opentelemetry/sdk-trace-web": "^2.5.0",
     "csv-stringify": "^6.6.0",
     "effect": "^3.19.16",
     "exceljs": "^4.4.0",

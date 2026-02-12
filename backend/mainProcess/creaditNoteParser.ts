@@ -1,7 +1,10 @@
+import { Effect } from "effect"
 import type {BillTo,CreditNoteMeta, OtherCharge, ParsedProduct, Seller, Ship, TaxDetail, } from "./Credittypes"
+import { func } from "effect/FastCheck"
 
 
-export function parseCreditNoteMeta(text: string): CreditNoteMeta {
+export const parseCreditNoteMeta = (text: string)=> Effect.gen (function * () {
+
   const orderNumber = text.match(
     /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i
   )?.[2]
@@ -30,10 +33,12 @@ export function parseCreditNoteMeta(text: string): CreditNoteMeta {
     invoice_no: invoiceMatch?.[1],
     invoice_date: invoiceMatch?.[2],
   }
-}
+}).pipe(Effect.withSpan("Tax Invoice Metadata"))
 
 
-export function extractSoldBy(text: string): Seller {
+export const extractSoldBy = (text: string) => Effect.gen(function *() {
+
+
   const clean = text.replace(/\r/g, "").trim()
 
   const regex =
@@ -50,7 +55,7 @@ export function extractSoldBy(text: string): Seller {
     seller_pincode: match[4] || "",
     seller_gstin: match[5] || "",
   }
-}
+})
 
 
 

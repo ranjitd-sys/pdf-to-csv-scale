@@ -1,9 +1,17 @@
 import ExcelJS from "exceljs"
 import { Effect } from "effect"
 import { Process } from "./main"
+import { NodeSdk } from "@effect/opentelemetry"
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
+const NodeSdkLive = NodeSdk.layer(() => ({
+  resource: { serviceName: "Invoice" },
+  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter())
+}))
+export const CSV = Effect.gen(function * () {
 
-export async function GenerateExcel() {
-  const data = await Effect.runPromise(Process)
+
+  const data = yield* Process;
 
   const workbook = new ExcelJS.Workbook()
 
@@ -157,7 +165,18 @@ export async function GenerateExcel() {
   // =====================================================
   // SAVE FILE
   // =====================================================
-  await workbook.xlsx.writeFile("../output/output.xlsx");
+  yield * Effect.promise(()=>  workbook.xlsx.writeFile("../output/output.xlsx")) 
+  
   console.log("Excel file generated successfully ✅")
-}
+}).pipe(Effect.withSpan("CSV Generator"))
 
+
+
+
+Effect.runPromise(
+  CSV.pipe(
+    //@ts-ignore
+    Effect.provide(NodeSdkLive),
+    Effect.catchAllCause(Effect.logError)
+  )
+)

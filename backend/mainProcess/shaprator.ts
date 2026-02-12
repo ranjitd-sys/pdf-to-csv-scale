@@ -1,3 +1,5 @@
+import { Effect } from "effect";
+
 type CreditNoteSections = {
   credit_note?: string;
   sold_by?: string;
@@ -14,7 +16,8 @@ type InvoiceType = {
   taxes: string | undefined;
   sold_by: string | undefined;
 };
-export function separateCreditNote(text: string): CreditNoteSections {
+
+export const separateCreditNote = (text: string) => Effect.gen(function *() {
   function extractBetween(start: string | RegExp, end?: string | RegExp) {
     const endPattern = typeof end === "string" ? end : end?.source;
     const startPattern = typeof start === "string" ? start : start?.source;
@@ -34,7 +37,14 @@ export function separateCreditNote(text: string): CreditNoteSections {
     product: extractBetween("Taxes Total", /(SGST|CGST|IGST)/),
     taxes: extractBetween(/(SGST|CGST|IGST)/),
   };
-}
+}).pipe(
+  Effect.withSpan("Total Credit", {
+    attributes: {
+      "step.type": "credit-processing",
+      "span.color": "purple"
+    }
+  })
+)
 
 export function separateTaxInvoice(text: string): InvoiceType {
   function extractBetween(start: string | RegExp, end?: string | RegExp) {
