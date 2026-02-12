@@ -2,14 +2,24 @@ import type {BillTo,CreditNoteMeta, OtherCharge, ParsedProduct, Seller, Ship, Ta
 
 
 export function parseCreditNoteMeta(text: string): CreditNoteMeta {
-  const orderNumber = text.match(/Order\s+Number:\s*(\S+)/i)?.[1]
-  const orderDate = text.match(/Order\s+Date:\s*([\d-]+\s+[\d:]+)/i)?.[1]
+  const orderNumber = text.match(
+    /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i
+  )?.[2]
 
-  const creditNoteNo = text.match(/Credit\s+Note\s+No:\s*(\S+)/i)?.[1]
-  const creditNoteDate = text.match(/Credit\s+Note\s+Date:\s*([\d-]+\s+[\d:]+)/i)?.[1]
+  const orderDate = text.match(
+    /Order\s+Date\s*:\s*([\d-]+\s+[\d:]+)/i
+  )?.[1]
+
+  const creditNoteNo = text.match(
+    /Credit\s+Note\s+(No|Number)\s*:\s*(\S+)/i
+  )?.[2]
+
+  const creditNoteDate = text.match(
+    /Credit\s+Note\s+Date\s*:\s*([\d-]+\s+[\d:]+)/i
+  )?.[1]
 
   const invoiceMatch = text.match(
-    /Invoice\s+No\s+and\s+Date:\s*(\S+)\s+([\d-]+\s+[\d:]+)/i
+    /Invoice\s+No\s+and\s+Date\s*:\s*(\S+)\s+([\d-]+\s+[\d:]+)/i
   )
 
   return {
@@ -63,76 +73,96 @@ export function extractBillTo(text: string):BillTo {
 }
 
 
-export function extractShipTo(text: string): Ship | null {
-  const clean = text.replace(/\r/g, "").trim()
+export function extractShipTo(text: string) {
+  const block = text.split(/SHIP TO:/g)[1]
+  if (!block) return null
 
-  // Capture block between SHIP TO: and SN. Description
-  const blockMatch = clean.match(
-    /SHIP TO:\s*\n([\s\S]*?)\nSN\./i
-  )
+  const cleaned = block.split(/SN\.\s*Description/i)[0]!.trim()
 
-  if (!blockMatch) return null
-  if(blockMatch[1]  === undefined) return null;
-  const lines = blockMatch[1]
+  const lines = cleaned
     .split("\n")
     .map(l => l.trim())
     .filter(Boolean)
 
-  if (lines.length < 2) return null
+  if (!lines.length) return null
 
-  const name = lines[0]
+  const ship_name = lines[0]
+  const fullText = lines.slice(1).join(" ")
 
-  // Full address except name
-  const addressLines = lines.slice(1)
+  const match = fullText.match(/([A-Za-z\s]+),\s*(\d{6})\b/)
 
-  const fullAddress = addressLines.join(" ")
+  let ship_state = ""
+  let ship_pincode = ""
+  let ship_city = ""
+  let ship_address = fullText
 
-  // Extract pincode (6 digit at end)
-  const pincodeMatch = fullAddress.match(/(\d{6})/)
+  if (match) {
+    ship_state = match[1]!.trim()
+    ship_pincode = match[2] || ""
 
-  const pincode = pincodeMatch ? pincodeMatch[1] : ""
+    ship_address = fullText.replace(match[0], "").trim()
 
-  // Extract city + state from last line before pincode
-  const cityStateMatch = fullAddress.match(
-    /,\s*([^,]+),\s*([^,]+),\s*\d{6}/
-  )
-
-  const city = cityStateMatch ? cityStateMatch[1]!.trim() : ""
-  const state = cityStateMatch ? cityStateMatch[2]!.trim() : ""
+    const cityMatch = ship_address.match(/,\s*([^,]+)\s*$/)
+    if (cityMatch) {
+      
+      ship_address = ship_address.replace(/,\s*([^,]+)\s*$/, "").trim()
+    }
+  }
 
   return {
-    ship_name: name || " ",
-    ship_address: fullAddress,
-    ship_city: city,
-    ship_state: state,
-    ship_pincode: pincode || "",
+    ship_name,
+    ship_address,
+    ship_state,
+    ship_pincode,
   }
 }
 
 
 
+export function ExtractProduct(rawText: string): ParsedProduct | null {
+  if (!rawText) return null
 
-export function ExtractProduct(rawText: string): ParsedProduct {
-  // Remove unwanted heading
-  const cleaned = rawText.replace(/^Taxes Total\s*/i, '').trim()
+  const cleaned = rawText
+    .replace(/Taxes\s+Total/i, "")
+    .replace(/\r/g, "")
+    .trim()
+
+  /**
+   * Supports:
+   * - With discount
+   * - Without discount
+   * - Multiline product names
+   * - Flexible spacing
+   */
 
   const regex =
-    /(\d+)\s+([\s\S]+?)\n(\d+)\s+(\d+)\s+(Rs\.\d+\.\d{2})\s+(Rs\.\d+\.\d{2})\s+(Rs\.\d+\.\d{2})$/
+    /^\s*(\d+)\s+([\s\S]+?)\s+(\d{5,})\s+(\d+)\s+Rs\.?\s?(\d+\.\d{2})(?:\s+Rs\.?\s?(\d+\.\d{2}))?\s+Rs\.?\s?(\d+\.\d{2})?\s*$/
 
   const match = cleaned.match(regex)
 
   if (!match) return null
 
+  const quantity = Number(match[1])
+  const name = match[2]!.replace(/\s+/g, " ").trim()
+  const sku = match[3] || ""
+  const quantity_confirm = Number(match[4])
+
+  const firstPrice = Number(match[5])
+  const secondPrice = match[6] ? Number(match[6]) : null
+  const thirdPrice = match[7] ? Number(match[7]) : null
+
   return {
-    quantity: Number(match[1]),
-    name: match[2]!.replace(/\n/g, ' ').trim(),
-    sku: match[3] || "",
-    quantity_confirm: Number(match[4]),
-    unit_price: Number(match[5]!.replace("Rs.", "")),
-    discount: Number(match[6]!.replace("Rs.", "")),
-    taxable_value: Number(match[7]!.replace("Rs.", "")),
+    quantity,
+    name,
+    sku,
+    quantity_confirm,
+    unit_price: firstPrice,
+    discount: thirdPrice ? secondPrice ?? 0 : 0,
+    taxable_value: thirdPrice ?? secondPrice ?? 0,
   }
 }
+
+
 
 export function parseTaxSection(text: string) {
   const result = {

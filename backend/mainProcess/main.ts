@@ -10,7 +10,7 @@ const folderPath = "./out";
 export const Process = Effect.gen(function* () {
   let TaxInvoiceCount = 0;
   let CreditNoteCount = 0;
-  let allData :any[] = [];
+  let CrediNotes :any[] = [];
   const files = yield* Effect.promise(() => readdir(folderPath));
   const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
 
@@ -23,7 +23,6 @@ export const Process = Effect.gen(function* () {
     const first = rawBytes.text.map((data) => {
       if (data.includes("Credit Note")) {
         const res = separateCreditNote(data);
-        console.log(res)
         const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
         const Sold = extractSoldBy(res.sold_by|| "");
         const Bill = extractBillTo(res.bill_to|| "");
@@ -38,10 +37,10 @@ export const Process = Effect.gen(function* () {
           ...Product,
           ...tax
         }
-        // console.log(first);
-
-        console.log(finalData)
-        // allData.push(res);
+        console.log(res.ship_to)
+        // console.log(Ship)
+        // console.log(Product)
+        CrediNotes.push(finalData);
         CreditNoteCount++;
       } else {
         return
@@ -50,7 +49,6 @@ export const Process = Effect.gen(function* () {
   }
   console.log("Tax Invoice ",TaxInvoiceCount);
   console.log("Credit Note",CreditNoteCount);
-  return allData;
+  return CrediNotes;
 });
 const response = await Effect.runPromise(Process);
-response.map(data => console.log(data))
