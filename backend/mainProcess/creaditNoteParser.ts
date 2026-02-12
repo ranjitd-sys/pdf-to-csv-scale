@@ -1,4 +1,4 @@
-import type {BillTo,CreditNoteMeta, OtherCharge, ParsedProduct, Seller, Ship, TaxDetail, } from "./types"
+import type {BillTo,CreditNoteMeta, OtherCharge, ParsedProduct, Seller, Ship, TaxDetail, } from "./Credittypes"
 
 
 export function parseCreditNoteMeta(text: string): CreditNoteMeta {

@@ -3,7 +3,8 @@ import { readdir } from "fs/promises";
 import { join, normalize } from "path";
 import { extractText } from "unpdf";
 import { parseCreditNoteMeta, extractSoldBy, extractBillTo, extractShipTo, ExtractProduct, parseTaxSection } from "./creaditNoteParser";
-import { separateCreditNote } from "./shaprator";
+import { separateCreditNote, separateTaxInvoice } from "./shaprator";
+import { extractInvoice } from "./taxInvoiceParser";
 
 const folderPath = "./out";
 
@@ -11,6 +12,7 @@ export const Process = Effect.gen(function* () {
   let TaxInvoiceCount = 0;
   let CreditNoteCount = 0;
   let CrediNotes :any[] = [];
+  let TaxInvoice : any[] = [];
   const files = yield* Effect.promise(() => readdir(folderPath));
   const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
 
@@ -20,8 +22,9 @@ export const Process = Effect.gen(function* () {
     const data = yield* Effect.promise(() => Bun.file(filePath).arrayBuffer());
 
     const rawBytes = yield* Effect.promise(() => extractText(data));
-    const first = rawBytes.text.map((data) => {
+    const credit = rawBytes.text.map((data) => {
       if (data.includes("Credit Note")) {
+        return;
         const res = separateCreditNote(data);
         const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
         const Sold = extractSoldBy(res.sold_by|| "");
@@ -29,7 +32,9 @@ export const Process = Effect.gen(function* () {
         const Ship = extractShipTo(res.ship_to || "");
         const Product = ExtractProduct(res.product || "");
         const tax  = parseTaxSection(res.taxes || "")
-        const finalData = {
+        console.log(res.taxes)
+         console.log(tax);
+        const TotalCreditNotes = {
           ...Credit_Note,
           ...Sold,
           ...Bill,
@@ -37,14 +42,25 @@ export const Process = Effect.gen(function* () {
           ...Product,
           ...tax
         }
-        console.log(res.ship_to)
-        // console.log(Ship)
+
+       
         // console.log(Product)
-        CrediNotes.push(finalData);
+        CrediNotes.push(TotalCreditNotes);
+        console.log(TotalCreditNotes)
         CreditNoteCount++;
       } else {
-        return
+     
+        const Invoice = rawBytes.text.map(data => {
+          const res = separateTaxInvoice(data);
+          const bill = extractInvoice(res.Bill_detail || "")
+          console.log(bill);
+          const Invoices = {
+            ...bill
+          }
+        })
+        TaxInvoiceCount++;
       }
+      
     });
   }
   console.log("Tax Invoice ",TaxInvoiceCount);
