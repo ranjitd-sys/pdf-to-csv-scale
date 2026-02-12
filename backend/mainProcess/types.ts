@@ -22,11 +22,43 @@ export type BillTo = {
   place_of_supply_state: string | null
 }
 
-export type ShipTo = {
-  name: string | undefined
-  address: string
-  city: string
-  state: string
-  pincode: string | undefined
-  
+
+
+export type Ship = {
+  ship_name: string
+  ship_address: string
+  ship_city: string
+  ship_state: string
+  ship_pincode: string
+}
+
+
+export type ParsedProduct = {
+  quantity: number
+  name: string
+  sku: string
+  quantity_confirm: number
+  unit_price: number
+  discount: number
+  taxable_value: number
 } | null
+
+
+
+
+export type TaxDetail = {
+  rate: number
+  amount: number
+}
+
+export type OtherCharge = {
+  line_no: number
+  description: string
+  code: string
+  unit_price: number
+  taxable_value: number
+  tax_type: string
+  tax_rate: number
+  tax_amount: number
+  line_total: number
+}

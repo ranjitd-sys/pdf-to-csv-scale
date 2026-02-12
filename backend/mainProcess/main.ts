@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { readdir } from "fs/promises";
 import { join, normalize } from "path";
 import { extractText } from "unpdf";
-import { parseCreditNoteMeta, extractSoldBy, extractBillTo } from "./creaditNoteParser";
+import { parseCreditNoteMeta, extractSoldBy, extractBillTo, extractShipTo, ExtractProduct, parseTaxSection } from "./creaditNoteParser";
 import { separateCreditNote } from "./shaprator";
 
 const folderPath = "./out";
@@ -27,12 +27,16 @@ export const Process = Effect.gen(function* () {
         const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
         const Sold = extractSoldBy(res.sold_by|| "");
         const Bill = extractBillTo(res.bill_to|| "");
-        console.log(Bill)
+        const Ship = extractShipTo(res.ship_to || "");
+        const Product = ExtractProduct(res.product || "");
+        const tax  = parseTaxSection(res.taxes || "")
         const finalData = {
           ...Credit_Note,
           ...Sold,
           ...Bill,
-        
+          ...Ship,
+          ...Product,
+          ...tax
         }
         // console.log(first);
 
