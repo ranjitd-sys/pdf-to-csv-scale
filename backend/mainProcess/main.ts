@@ -58,6 +58,7 @@ export const Process = Effect.gen(function* () {
           const tax = parseTaxSection(res.taxes || "");
           const seller = extractSellerDetails(res.sold_by || "");
           const InvoiceDates = extractInvoiceDates(res.order || "")
+
           const Invoices = {
             ...bill,
             ...shipInfo,
@@ -66,7 +67,9 @@ export const Process = Effect.gen(function* () {
             ...tax,
             ...InvoiceDates
           }
-          console.log(Invoices);
+          
+          TaxInvoice.push(Invoices);
+          console.log(Invoices)
           // console.log(res.sold_by)
         })
         TaxInvoiceCount++;
@@ -76,6 +79,6 @@ export const Process = Effect.gen(function* () {
   }
   console.log("Tax Invoice ",TaxInvoiceCount);
   console.log("Credit Note",CreditNoteCount);
-  return CrediNotes;
+  return {CrediNotes,TaxInvoice};
 });
 const response = await Effect.runPromise(Process);

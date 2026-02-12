@@ -3,7 +3,7 @@ import { Effect } from "effect"
 import { writeFileSync } from "fs"
 import { Process } from "./main"
 
-function generateCSV(data: any[]) {
+export function CreditNotegenerateCSV(data: any[]) {
   const flattened = data.map((item) => ({
     order_number: item.order_number,
     order_date: item.order_date,
@@ -50,13 +50,14 @@ function generateCSV(data: any[]) {
     total_tax: item.total_tax,
     grand_total: item.grand_total,
   }))
-  console.log(flattened[20])
+
   const csv = stringify(flattened, {
     header: true,
   })
 
   writeFileSync("../output/output.csv", csv)
 }
-const innvoices = await Effect.runPromise(Process);
-
-generateCSV(innvoices)
+export async function GetCsv(){
+  const innvoices = await Effect.runPromise(Process);
+  CreditNotegenerateCSV(innvoices.CrediNotes);
+}
