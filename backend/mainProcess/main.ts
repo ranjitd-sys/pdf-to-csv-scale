@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { readdir } from "fs/promises";
 import { join, normalize } from "path";
 import { extractText } from "unpdf";
-import { extractCreditNote } from "./creaditNoteParser";
+import { parseCreditNoteMeta, extractSoldBy, extractBillTo } from "./creaditNoteParser";
 import { separateCreditNote } from "./shaprator";
 
 const folderPath = "./out";
@@ -23,8 +23,21 @@ export const Process = Effect.gen(function* () {
     const first = rawBytes.text.map((data) => {
       if (data.includes("Credit Note")) {
         const res = separateCreditNote(data);
+        console.log(res)
+        const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
+        const Sold = extractSoldBy(res.sold_by|| "");
+        const Bill = extractBillTo(res.bill_to|| "");
+        console.log(Bill)
+        const finalData = {
+          ...Credit_Note,
+          ...Sold,
+          ...Bill,
         
-        allData.push(res);
+        }
+        // console.log(first);
+
+        console.log(finalData)
+        // allData.push(res);
         CreditNoteCount++;
       } else {
         return

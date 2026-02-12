@@ -1,7 +1,7 @@
 import { stringify } from "csv-stringify/sync";
 import { Effect } from "effect";
 import { rm } from "fs/promises";
-import { Process } from "./process";
+import { Process } from "./main";
 export async function convertToCSV(data: any[]) {
   const outputDir = "../output";
   const filePath = `${outputDir}/output.csv`;

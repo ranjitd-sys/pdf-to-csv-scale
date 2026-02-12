@@ -1,204 +1,63 @@
-// creditNoteParser.ts
+import type {BillTo,CreditNoteMeta, Seller, ShipTo } from "./types"
 
-import { extractIndianState } from "./state";
 
-export const  extractCreditNote = (text: string) => {
-  const clean = text.replace(/\r/g, "").trim();
+export function parseCreditNoteMeta(text: string): CreditNoteMeta {
+  const orderNumber = text.match(/Order\s+Number:\s*(\S+)/i)?.[1]
+  const orderDate = text.match(/Order\s+Date:\s*([\d-]+\s+[\d:]+)/i)?.[1]
 
-  // ======================================
-  // BASIC FIELD EXTRACTION
-  // ======================================
+  const creditNoteNo = text.match(/Credit\s+Note\s+No:\s*(\S+)/i)?.[1]
+  const creditNoteDate = text.match(/Credit\s+Note\s+Date:\s*([\d-]+\s+[\d:]+)/i)?.[1]
 
-  const orderNumber =
-    clean.match(/Order\s*Number:\s*(\S+)/i)?.[1] || null;
-
-  const orderDate =
-    clean.match(/Order\s*Date:\s*([0-9:\-\s]+)/i)?.[1]?.trim() || null;
-
-  const creditNoteNo =
-    clean.match(/Credit\s*Note\s*No:\s*(\S+)/i)?.[1] || null;
-
-  const creditNoteDate =
-    clean.match(/Credit\s*Note\s*Date:\s*([0-9:\-\s]+)/i)?.[1]?.trim() || null;
-
-  const invoiceMatch = clean.match(
-    /Invoice\s*No\s*and\s*Date:\s*(\S+)\s*([0-9:\-\s]+)/i
-  );
-
-  const invoiceNumber = invoiceMatch?.[1] || null;
-  const invoiceDate = invoiceMatch?.[2]?.trim() || null;
-
-  const gstin =
-    clean.match(/GSTIN\s*:\s*([0-9A-Z]+)/i)?.[1] || null;
-
-  // ======================================
-  // SECTION EXTRACTOR
-  // ======================================
-
-  function extractSection(start: string, end: string) {
-    const regex = new RegExp(`${start}([\\s\\S]*?)${end}`, "i");
-    return clean.match(regex)?.[1]?.trim();
-  }
-
-  const soldBySection = extractSection("SOLD BY:", "BILL TO:");
-  const billToSection = extractSection("BILL TO:", "SHIP TO:");
-  const shipToSection = extractSection("SHIP TO:", "SN\\.");
-
-  // ======================================
-  // INDIAN ADDRESS PARSER
-  // ======================================
-
-  function parseIndianAddress(section?: string) {
-    if (!section) return null;
-
-    const lines = section
-      .split("\n")
-      .map(l => l.trim())
-      .filter(Boolean)
-      .filter(l => !/GSTIN/i.test(l));
-
-    const name = lines[0] || null;
-
-    const stateLine = lines.find(l => /\d{6}/.test(l));
-
-    let city: string | null = null;
-    let state: string | null = null;
-    let pincode: string | null = null;
-
-    if (stateLine) {
-      const match = stateLine.match(/(.+?),\s*([^,]+),\s*(\d{6})/);
-      if (match) {
-        city = match[1]?.trim()||"";
-        state = extractIndianState(text)
-        pincode = match[3] || "";
-      }
-    }
-
-    const addressLines = lines
-      .slice(1)
-      .filter(l => l !== stateLine);
-
-    return {
-      name,
-      address: addressLines.join(" ") || null,
-      city,
-      state,
-      pincode
-    };
-  }
-
-  // ======================================
-  // PRODUCT DESCRIPTION EXTRACTOR
-  // ======================================
-
-  function extractProductDescription(text: string) {
-    const match = text.match(
-      /\n1\s+([\s\S]*?)\n\d{6}\s+\d+\s+Rs\./
-    );
-
-    if (!match || match[1] === undefined ) return null;
-    
-    return match[1]
-      .split("\n")
-      .map(l => l.trim())
-      .filter(Boolean)
-      .join(" ");
-  }
-
-  // ======================================
-  // PRODUCT PRICE + TAX EXTRACTOR
-  // ======================================
-
-  function extractProductPricing(text: string) {
-    const lineMatch = text.match(
-      /(\d{6})\s+(\d+)\s+Rs\.?([\d.]+)\s+Rs\.?([\d.]+)\s+Rs\.?([\d.]+)/i
-    );
-
-    if (!lineMatch) return null;
-
-    const hsn = lineMatch[1];
-    const quantity = Number(lineMatch[2]);
-    const gross = Number(lineMatch[3]);
-    const discount = Number(lineMatch[4]);
-    const taxable = Number(lineMatch[5]);
-
-    const sgstMatch = text.match(
-      /SGST\s*@([\d.]+)%\s*:?\s*Rs\.?([\d.]+)/i
-    );
-
-    const cgstMatch = text.match(
-      /CGST\s*@([\d.]+)%\s*:?\s*Rs\.?([\d.]+)/i
-    );
-
-    const sgstRate = sgstMatch ? Number(sgstMatch[1]) : 0;
-    const sgstAmount = sgstMatch ? Number(sgstMatch[2]) : 0;
-
-    const cgstRate = cgstMatch ? Number(cgstMatch[1]) : 0;
-    const cgstAmount = cgstMatch ? Number(cgstMatch[2]) : 0;
-
-    const grandMatch = text.match(
-      /Total\s+Rs\.([\d.]+)\s+Rs\.([\d.]+)/i
-    );
-
-    const totalTax = grandMatch ? Number(grandMatch[1]) : 0;
-    const grandTotal = grandMatch ? Number(grandMatch[2]) : 0;
-
-    return {
-      hsn,
-      quantity,
-      gross,
-      discount,
-      taxable_value: taxable,
-      
-        sgst_rate: sgstRate,
-        sgst_amount: sgstAmount,
-        cgst_rate: cgstRate,
-        cgst_amount: cgstAmount,
-      
-      total_tax: totalTax,
-      grand_total: grandTotal
-    };
-  }
-
-  const description = extractProductDescription(clean);
-  const pricing = extractProductPricing(clean);
-
-  // ======================================
-  // FINAL STRUCTURED OUTPUT
-  // ======================================
+  const invoiceMatch = text.match(
+    /Invoice\s+No\s+and\s+Date:\s*(\S+)\s+([\d-]+\s+[\d:]+)/i
+  )
 
   return {
-    document_type: "credit_note",
+    order_number: orderNumber,
+    order_date: orderDate,
+    credit_note_no: creditNoteNo,
+    credit_note_date: creditNoteDate,
+    invoice_no: invoiceMatch?.[1],
+    invoice_date: invoiceMatch?.[2],
+  }
+}
 
-    
-      CreditNumber: creditNoteNo,
-      CreditDate: creditNoteDate,
-    
 
-  
-      order_number: orderNumber,
-      order_date: orderDate,
-  
+export function extractSoldBy(text: string): Seller {
+  const clean = text.replace(/\r/g, "").trim()
 
-   
-      invoice_number: invoiceNumber,
-      invoice_date: invoiceDate,
-    
+  const regex =
+    /SOLD BY:\s*\n([^\n]+)\n([^,]+),\s*([^,]+),\s*(\d{6})\nGSTIN\s*:\s*([A-Z0-9]+)/i
 
-    
-      ...parseIndianAddress(soldBySection),
-      gstin,
-    
+  const match = clean.match(regex)
 
-    ...parseIndianAddress(billToSection),
+  if (!match) return null
 
-    ...parseIndianAddress(shipToSection),
+  return {
+    seller_name: match[1]!.trim(),
+    seller_city: match[2]!.trim(),
+    seller_state: match[3]!.trim(),
+    seller_pincode: match[4] || "",
+    seller_gstin: match[5] || "",
+  }
+}
 
-   
-      description,
-      ...pricing,
-    
 
-    extracted_at: new Date().toISOString()
-  };
+
+export function extractBillTo(text: string):BillTo {
+  const clean = text.replace(/\r/g, "").trim()
+
+  // Extract name (line after BILL TO:)
+  const nameMatch = clean.match(/BILL TO:\s*\n([^\n]+)/i)
+
+  // Extract place of supply
+  const placeMatch = clean.match(
+    /Place of Supply\s*:\s*(\d+)\s+([A-Za-z\s]+)/i
+  )
+
+  return {
+    Bill_name: nameMatch ? nameMatch[1]!.trim() : null,
+    place_of_supply_code: placeMatch ? placeMatch[1]!.trim() : null,
+    place_of_supply_state: placeMatch ? placeMatch[2]!.trim() : null,
+  }
 }
