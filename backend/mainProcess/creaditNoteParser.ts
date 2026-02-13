@@ -33,7 +33,7 @@ export const parseCreditNoteMeta = (text: string)=> Effect.gen (function * () {
     invoice_no: invoiceMatch?.[1],
     invoice_date: invoiceMatch?.[2],
   }
-}).pipe(Effect.withSpan("Tax Invoice Metadata"))
+})
 
 
 export const extractSoldBy = (text: string) => Effect.gen(function *() {

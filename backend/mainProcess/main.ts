@@ -58,8 +58,8 @@ export const Process = Effect.gen(function* () {
         console.log(TotalCreditNotes);
         CreditNoteCount++;
       } else {
-         rawBytes.text.map((data) => {
-          const res = separateTaxInvoice(data);
+         for(let data of rawBytes.text) {
+          const res = yield *separateTaxInvoice(data);
           const bill = extractInvoice(res.Bill_detail || "");
           const shipInfo = invoiceExtractShip(res.ship_to || "");
           const product = InvoiceextractProduct(res.product || "");
@@ -79,7 +79,7 @@ export const Process = Effect.gen(function* () {
           TaxInvoice.push(Invoices);
           // console.log(Invoices)
           // console.log(res.sold_by)
-        });
+        };
         TaxInvoiceCount++;
       }
     }
@@ -88,4 +88,9 @@ export const Process = Effect.gen(function* () {
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
   return { CrediNotes, TaxInvoice };
-}).pipe(Effect.withSpan("chunk and Selialized"));
+}).pipe(
+  // Use withSpan to wrap the whole execution
+  Effect.withSpan("PDF_Processing_Pipeline", {
+    attributes: { "peer.service": "DocumentProcessor" }
+  })
+);
