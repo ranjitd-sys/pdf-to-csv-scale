@@ -37,7 +37,7 @@ export const separateCreditNote = (text: string) => Effect.gen(function *() {
     product: extractBetween("Taxes Total", /(SGST|CGST|IGST)/),
     taxes: extractBetween(/(SGST|CGST|IGST)/),
   };
-}).pipe(Effect.withSpan("CreditNoteBranch"));
+})
 
 export const separateTaxInvoice = (text: string) => Effect.gen(function* () {
 
@@ -67,4 +67,4 @@ export const separateTaxInvoice = (text: string) => Effect.gen(function* () {
       "Tax is not payable on reverse charge basis",
     ),
   };
-}).pipe(Effect.withSpan("InvoiceBranch"));
+})

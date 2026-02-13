@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, TArray } from "effect";
 import { readdir } from "fs/promises";
 import { join, normalize } from "path";
 import { extractText } from "unpdf";
@@ -36,8 +36,8 @@ export const Process = Effect.gen(function* () {
     const rawBytes = yield* Effect.promise(() => extractText(data));
     for (const data of rawBytes.text) {
       if (data.includes("Credit Note")) {
-        const res = yield *separateCreditNote(data)
-        const Credit_Note = yield* parseCreditNoteMeta(res.credit_note || "");
+        const res = yield* separateCreditNote(data)
+         const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
         const Sold = extractSoldBy(res.sold_by || "");
         const Bill = extractBillTo(res.bill_to || "");
         const Ship = extractShipTo(res.ship_to || "");
@@ -59,7 +59,7 @@ export const Process = Effect.gen(function* () {
         CreditNoteCount++;
       } else {
          for(let data of rawBytes.text) {
-          const res = yield *separateTaxInvoice(data);
+          const res = yield* separateTaxInvoice(data);
           const bill = extractInvoice(res.Bill_detail || "");
           const shipInfo = invoiceExtractShip(res.ship_to || "");
           const product = InvoiceextractProduct(res.product || "");
@@ -87,10 +87,12 @@ export const Process = Effect.gen(function* () {
   }
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
-  return { CrediNotes, TaxInvoice };
+  return { CrediNotes,TaxInvoice };
 }).pipe(
   // Use withSpan to wrap the whole execution
   Effect.withSpan("PDF_Processing_Pipeline", {
     attributes: { "peer.service": "DocumentProcessor" }
   })
 );
+const data = await  Effect.runPromise(Process);
+console.log(data)

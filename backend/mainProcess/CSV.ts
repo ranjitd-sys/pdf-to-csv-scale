@@ -165,18 +165,9 @@ export const CSV = Effect.gen(function * () {
   // =====================================================
   // SAVE FILE
   // =====================================================
-  yield * Effect.promise(()=>  workbook.xlsx.writeFile("../output/output.xlsx")) 
+  yield* Effect.promise(()=>  workbook.xlsx.writeFile("../output/output.xlsx")) 
   
   console.log("Excel file generated successfully ✅")
 }).pipe(Effect.withSpan("CSV Generator"))
 
-
-
-
-Effect.runPromise(
-  CSV.pipe(
-    //@ts-ignore
-    Effect.provide(NodeSdkLive),
-    Effect.catchAllCause(Effect.logError)
-  )
-)
+const res = await Effect.runPromise(CSV)

@@ -3,7 +3,7 @@ import type {BillTo,CreditNoteMeta, OtherCharge, ParsedProduct, Seller, Ship, Ta
 import { func } from "effect/FastCheck"
 
 
-export const parseCreditNoteMeta = (text: string)=> Effect.gen (function * () {
+export const parseCreditNoteMeta = (text: string) =>  {
 
   const orderNumber = text.match(
     /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i
@@ -33,10 +33,10 @@ export const parseCreditNoteMeta = (text: string)=> Effect.gen (function * () {
     invoice_no: invoiceMatch?.[1],
     invoice_date: invoiceMatch?.[2],
   }
-})
+}
 
 
-export const extractSoldBy = (text: string) => Effect.gen(function *() {
+export const extractSoldBy = (text: string) => {
 
 
   const clean = text.replace(/\r/g, "").trim()
@@ -55,7 +55,7 @@ export const extractSoldBy = (text: string) => Effect.gen(function *() {
     seller_pincode: match[4] || "",
     seller_gstin: match[5] || "",
   }
-})
+}
 
 
 
