@@ -5,10 +5,7 @@ import { NodeSdk } from "@effect/opentelemetry"
 import { $ } from "bun"
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
-const NodeSdkLive = NodeSdk.layer(() => ({
-  resource: { serviceName: "Invoice" },
-  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter())
-}))
+
 export const CSV = Effect.gen(function * () {
 
 
@@ -173,13 +170,11 @@ export const CSV = Effect.gen(function * () {
   
 }).pipe(Effect.withSpan("CSV Generator"))
 
-export const Main = Effect.gen(function * (){
-  
-    CSV.pipe(
-      //@ts-ignore
-      Effect.provide(NodeSdkLive),
-    )
-  
-  
-})
 
+
+export const Main = Effect.gen(function* () {
+  yield* CSV.pipe(
+    //@ts-ignore
+    Effect.provide(NodeSdk1)
+  )
+})

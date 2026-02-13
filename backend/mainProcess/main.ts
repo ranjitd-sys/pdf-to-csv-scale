@@ -104,7 +104,11 @@ export const Process = Effect.gen(function* () {
   }
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
-  return { CrediNotes, TaxInvoice };
+  yield* Effect.annotateCurrentSpan({
+    "credit_note.count": CreditNoteCount,
+    "tax_invoice.count": TaxInvoiceCount,
+  });
+  return { CrediNotes, TaxInvoice, TaxInvoiceCount, CreditNoteCount };
 }).pipe(
   // Use withSpan to wrap the whole execution
   Effect.withSpan("PDF_Processing_Pipeline", {

@@ -8,7 +8,17 @@ import cors from "@fastify/cors";
 import { $ } from "bun";
 import { Effect } from "effect";
 import fs from "fs";
+import { NodeSdk } from "@effect/opentelemetry";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+
 import { CSV, Main } from "./mainProcess/CSV";
+
+const NodeSdkLive = NodeSdk.layer(() => ({
+  resource: { serviceName: "Invoice" },
+  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
+}));
+
 const fastify = Fastify({
   logger: true,
 });
@@ -35,10 +45,11 @@ fastify.post("/upload", async (req, res) => {
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        const allPdfData = await Effect.runPromiseExit(Main);
-        console.log(allPdfData);
-        await $`rm -rf ./out`.nothrow();
-        await $`rm -rf ./uploads`.nothrow();
+        //@ts-ignore
+        await Effect.runPromise(CSV.pipe(Effect.provide(NodeSdkLive)));
+
+        await $`rm -rf ./out`;
+        await $`rm -rf ./uploads`;
         return {
           status: "SUCCESS",
           message: "Data Parse Sussessfully",
