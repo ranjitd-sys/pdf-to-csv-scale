@@ -36,63 +36,80 @@ export const Process = Effect.gen(function* () {
     const rawBytes = yield* Effect.promise(() => extractText(data));
     for (const data of rawBytes.text) {
       if (data.includes("Credit Note")) {
-        const res = yield* separateCreditNote(data)
-         const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
-        const Sold = extractSoldBy(res.sold_by || "");
-        const Bill = extractBillTo(res.bill_to || "");
-        const Ship = extractShipTo(res.ship_to || "");
-        const Product = ExtractProduct(res.product || "");
-        const tax = parseTaxSection(res.taxes || "");
+        const orderMatch = data.match(
+          /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i,
+        );
 
-        const TotalCreditNotes = {
-          ...Credit_Note,
-          ...Sold,
-          ...Bill,
-          ...Ship,
-          ...Product,
-          ...tax,
-        };
+        const orderNumber = orderMatch?.[2] ?? "Unknown";
+
+        const TotalCreditNotes = yield* Effect.gen(function* () {
+          const res = yield* separateCreditNote(data);
+
+          const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
+          const Sold = extractSoldBy(res.sold_by || "");
+          const Bill = extractBillTo(res.bill_to || "");
+          const Ship = extractShipTo(res.ship_to || "");
+          const Product = ExtractProduct(res.product || "");
+          const tax = parseTaxSection(res.taxes || "");
+
+          return {
+            ...Credit_Note,
+            ...Sold,
+            ...Bill,
+            ...Ship,
+            ...Product,
+            ...tax,
+          };
+        }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
 
         // console.log(Product)
         CrediNotes.push(TotalCreditNotes);
         console.log(TotalCreditNotes);
         CreditNoteCount++;
       } else {
-         for(let data of rawBytes.text) {
-          const res = yield* separateTaxInvoice(data);
-          const bill = extractInvoice(res.Bill_detail || "");
-          const shipInfo = invoiceExtractShip(res.ship_to || "");
-          const product = InvoiceextractProduct(res.product || "");
-          const tax = parseTaxSection(res.taxes || "");
-          const seller = extractSellerDetails(res.sold_by || "");
-          const InvoiceDates = extractInvoiceDates(res.order || "");
+        for (let data of rawBytes.text) {
 
-          const Invoices = {
-            ...bill,
-            ...shipInfo,
-            ...product,
-            ...seller,
-            ...tax,
-            ...InvoiceDates,
-          };
+          const clean = data.replace(/\r/g, "").trim()
+          const orderMatch = clean.match(/\s*\n\s*(\d{12,})/);
+
+          const orderNumber = orderMatch ?  orderMatch[0] : "Unknown";
+
+
+          const Invoices = yield* Effect.gen(function * (){
+            const res = yield* separateTaxInvoice(data);
+            const bill = extractInvoice(res.Bill_detail || "");
+            const shipInfo = invoiceExtractShip(res.ship_to || "");
+            const product = InvoiceextractProduct(res.product || "");
+            const tax = parseTaxSection(res.taxes || "");
+            const seller = extractSellerDetails(res.sold_by || "");
+            const InvoiceDates = extractInvoiceDates(res.order || "");
+  
+           return {
+              ...bill,
+              ...shipInfo,
+              ...product,
+              ...seller,
+              ...tax,
+              ...InvoiceDates,
+            };
+          }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`))
 
           TaxInvoice.push(Invoices);
           // console.log(Invoices)
           // console.log(res.sold_by)
-        };
+        }
         TaxInvoiceCount++;
       }
     }
-    
   }
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
-  return { CrediNotes,TaxInvoice };
+  return { CrediNotes, TaxInvoice };
 }).pipe(
   // Use withSpan to wrap the whole execution
   Effect.withSpan("PDF_Processing_Pipeline", {
-    attributes: { "peer.service": "DocumentProcessor" }
-  })
+    attributes: { "peer.service": "DocumentProcessor" },
+  }),
 );
-const data = await  Effect.runPromise(Process);
-console.log(data)
+const data = await Effect.runPromise(Process);
+console.log(data);
