@@ -1,6 +1,6 @@
-import { Effect, TArray } from "effect";
+import { Effect } from "effect";
 import { readdir } from "fs/promises";
-import { join, normalize } from "path";
+import { join } from "path";
 import { extractText } from "unpdf";
 import {
   parseCreditNoteMeta,
@@ -111,5 +111,4 @@ export const Process = Effect.gen(function* () {
     attributes: { "peer.service": "DocumentProcessor" },
   }),
 );
-const data = await Effect.runPromise(Process);
-console.log(data);
+

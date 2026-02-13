@@ -8,7 +8,7 @@ import cors from "@fastify/cors";
 import { $ } from "bun";
 import { Effect } from "effect";
 import fs from "fs";
-import { CSV } from "./mainProcess/CSV";
+import { CSV, Main } from "./mainProcess/CSV";
 const fastify = Fastify({
   logger: true,
 });
@@ -35,7 +35,7 @@ fastify.post("/upload", async (req, res) => {
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        const allPdfData =  await Effect.runPromise(CSV);
+        const allPdfData = await Effect.runPromise(Main);
 
         console.log(allPdfData);
 

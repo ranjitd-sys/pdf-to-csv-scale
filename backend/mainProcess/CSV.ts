@@ -170,12 +170,12 @@ export const CSV = Effect.gen(function * () {
   console.log("Excel file generated successfully ✅")
 }).pipe(Effect.withSpan("CSV Generator"))
 
-
-
-Effect.runPromise(
-  CSV.pipe(
-    //@ts-ignore
-    Effect.provide(NodeSdkLive),
-   
+export const Main = Effect.gen(function * (){
+  Effect.runPromise(
+    CSV.pipe(
+      //@ts-ignore
+      Effect.provide(NodeSdkLive),
+    )
   )
-)
+})
+
