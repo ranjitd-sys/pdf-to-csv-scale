@@ -95,8 +95,7 @@ export const Process = Effect.gen(function* () {
           }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`))
 
           TaxInvoice.push(Invoices);
-          // console.log(Invoices)
-          // console.log(res.sold_by)
+       
         }
         TaxInvoiceCount++;
       }
@@ -104,13 +103,13 @@ export const Process = Effect.gen(function* () {
   }
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
+  
   yield* Effect.annotateCurrentSpan({
     "credit_note.count": CreditNoteCount,
     "tax_invoice.count": TaxInvoiceCount,
   });
   return { CrediNotes, TaxInvoice, TaxInvoiceCount, CreditNoteCount };
 }).pipe(
-  // Use withSpan to wrap the whole execution
   Effect.withSpan("PDF_Processing_Pipeline", {
     attributes: { "peer.service": "DocumentProcessor" },
   }),
