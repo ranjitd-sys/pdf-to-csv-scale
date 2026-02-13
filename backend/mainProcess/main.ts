@@ -10,7 +10,9 @@ import {
   ExtractProduct,
   parseTaxSection,
 } from "./creaditNoteParser";
+
 import { separateCreditNote, separateTaxInvoice } from "./shaprator";
+
 import {
   extractInvoice,
   extractInvoiceDates,
@@ -62,7 +64,6 @@ export const Process = Effect.gen(function* () {
           };
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
 
-        // console.log(Product)
         CrediNotes.push(TotalCreditNotes);
         console.log(TotalCreditNotes);
         CreditNoteCount++;
@@ -103,7 +104,7 @@ export const Process = Effect.gen(function* () {
   }
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
-  
+
   yield* Effect.annotateCurrentSpan({
     "credit_note.count": CreditNoteCount,
     "tax_invoice.count": TaxInvoiceCount,
