@@ -22,11 +22,11 @@ fastify.register(cors, {
   origin: true,
 });
 const UPLOAD_DIR = "./uploads";
-await mkdir(UPLOAD_DIR, { recursive: true });
 
 fastify.post("/upload", async (req, res) => {
   const options: Record<string, string> = {};
   let filePath = "";
+  await mkdir(UPLOAD_DIR, { recursive: true });
   try {
     const parts = req.parts();
     for await (const part of parts) {
@@ -35,10 +35,10 @@ fastify.post("/upload", async (req, res) => {
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        const allPdfData = await Effect.runPromise(Main);
-
+        const allPdfData = await Effect.runPromiseExit(Main);
         console.log(allPdfData);
-
+        await $`rm -rf ./out`.nothrow();
+        await $`rm -rf ./uploads`.nothrow();
         return {
           status: "SUCCESS",
           message: "Data Parse Sussessfully",

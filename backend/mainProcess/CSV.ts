@@ -2,6 +2,7 @@ import ExcelJS from "exceljs"
 import { Effect } from "effect"
 import { Process } from "./main"
 import { NodeSdk } from "@effect/opentelemetry"
+import { $ } from "bun"
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 const NodeSdkLive = NodeSdk.layer(() => ({
@@ -167,15 +168,18 @@ export const CSV = Effect.gen(function * () {
   // =====================================================
   yield* Effect.promise(()=>  workbook.xlsx.writeFile("../output/output.xlsx")) 
   
-  console.log("Excel file generated successfully ✅")
+  console.log("Excel file generated successfully ✅");
+
+  
 }).pipe(Effect.withSpan("CSV Generator"))
 
 export const Main = Effect.gen(function * (){
-  Effect.runPromise(
+  
     CSV.pipe(
       //@ts-ignore
       Effect.provide(NodeSdkLive),
     )
-  )
+  
+  
 })
 
