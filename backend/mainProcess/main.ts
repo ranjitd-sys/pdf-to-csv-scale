@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { extractText } from "unpdf";
@@ -63,7 +63,6 @@ export const Process = Effect.gen(function* () {
             ...tax,
           };
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
-
         CrediNotes.push(TotalCreditNotes);
         console.log(TotalCreditNotes);
         CreditNoteCount++;

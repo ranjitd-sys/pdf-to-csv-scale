@@ -1,9 +1,8 @@
 import { Effect } from "effect"
-import type {BillTo,CreditNoteMeta, OtherCharge, ParsedProduct, Seller, Ship, TaxDetail, } from "./Credittypes"
-import { func } from "effect/FastCheck"
+import type {BillTo,CreditNoteMeta, OrderTaxInfo, OtherCharge, ParsedProduct, Seller, Ship, TaxDetail, } from "./Credittypes"
 
 
-export const parseCreditNoteMeta = (text: string) =>  {
+export const parseCreditNoteMeta = (text: string):CreditNoteMeta =>  {
 
   const orderNumber = text.match(
     /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i
@@ -36,7 +35,7 @@ export const parseCreditNoteMeta = (text: string) =>  {
 }
 
 
-export const extractSoldBy = (text: string) => {
+export const extractSoldBy = (text: string):Seller => {
 
 
   const clean = text.replace(/\r/g, "").trim()
@@ -78,7 +77,7 @@ export function extractBillTo(text: string):BillTo {
 }
 
 
-export function extractShipTo(text: string) {
+export function extractShipTo(text: string):Ship | null{
   const block = text.split(/SHIP TO:/g)[1]
   if (!block) return null
 
@@ -91,7 +90,7 @@ export function extractShipTo(text: string) {
 
   if (!lines.length) return null
 
-  const ship_name = lines[0]
+  const ship_name = lines[0] || null;
   const fullText = lines.slice(1).join(" ")
 
   const match = fullText.match(/([A-Za-z\s]+),\s*(\d{6})\b/)
@@ -169,7 +168,7 @@ export function ExtractProduct(rawText: string): ParsedProduct | null {
 
 
 
-export function parseTaxSection(text: string) {
+export function parseTaxSection(text: string): OrderTaxInfo {
   const result = {
     igst: null as TaxDetail | null,
     sgst: null as TaxDetail | null,

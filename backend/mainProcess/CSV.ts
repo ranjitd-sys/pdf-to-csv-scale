@@ -1,10 +1,11 @@
 import ExcelJS from "exceljs"
-import { Effect } from "effect"
+import { Effect, Schema } from "effect"
 import { Process } from "./main"
 import { NodeSdk } from "@effect/opentelemetry"
 import { $ } from "bun"
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
+import { CreditNoteSchema } from "./schema"
 
 export const CSV = Effect.gen(function * () {
 

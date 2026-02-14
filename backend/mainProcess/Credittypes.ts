@@ -22,9 +22,8 @@ export type BillTo = {
 };
 
 export type Ship = {
-  ship_name: string;
+  ship_name: string | null
   ship_address: string;
-  ship_city: string;
   ship_state: string;
   ship_pincode: string;
 };
@@ -55,3 +54,11 @@ export type OtherCharge = {
   tax_amount: number;
   line_total: number;
 };
+export type OrderTaxInfo =  {
+  igst: TaxDetail | null;
+  sgst: TaxDetail | null;
+  cgst: TaxDetail | null;
+  other_charges: OtherCharge | null;
+  total_tax: number | null;
+  grand_total: number | null;
+}

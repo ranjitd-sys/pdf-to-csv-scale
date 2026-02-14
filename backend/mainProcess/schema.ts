@@ -1,6 +1,6 @@
 import { Schema } from "@effect/schema";
 
-export const OrderExportRow = Schema.Struct({
+export const CreditNoteSchema = Schema.Struct({
   // --- Identifiers & Dates ---
   order_number: Schema.String,
   order_date: Schema.Union(Schema.Date, Schema.String), // Accepts Date obj or ISO string
@@ -55,4 +55,4 @@ export const OrderExportRow = Schema.Struct({
 });
 
 // Extract the TypeScript Type
-export type OrderExportRow = Schema.Schema.Type<typeof OrderExportRow>;
+export type CreditNote  = Schema.Schema.Type<typeof CreditNoteSchema>;
