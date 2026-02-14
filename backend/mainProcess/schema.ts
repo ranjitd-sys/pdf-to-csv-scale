@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
+// Keep your individual struct definition
 export const CreditNoteSchema = Schema.Struct({
-  // --- From umber ---S
   order_number: Schema.optional(Schema.String),
   order_date: Schema.optional(Schema.String),
   credit_note_no: Schema.optional(Schema.String),
@@ -9,27 +9,21 @@ export const CreditNoteSchema = Schema.Struct({
   invoice_no: Schema.optional(Schema.String),
   invoice_date: Schema.optional(Schema.String),
 
-  // --- From Seller (Nullable) ---
-  // Since the original 'Seller' object could be null, these fields are marked NullOr
   seller_name: Schema.NullOr(Schema.String),
   seller_city: Schema.NullOr(Schema.String),
   seller_state: Schema.NullOr(Schema.String),
   seller_pincode: Schema.NullOr(Schema.String),
   seller_gstin: Schema.NullOr(Schema.String),
 
-  // --- From BillTo ---
   Bill_name: Schema.NullOr(Schema.String),
   place_of_supply_code: Schema.NullOr(Schema.String),
   place_of_supply_state: Schema.NullOr(Schema.String),
 
-  // --- From Ship ---
   ship_name: Schema.NullOr(Schema.String),
   ship_address: Schema.String,
   ship_state: Schema.String,
   ship_pincode: Schema.String,
 
-  // --- From ParsedProduct (Nullable) ---
-  // These represent the main product line items
   quantity: Schema.NullOr(Schema.Number),
   name: Schema.NullOr(Schema.String),
   sku: Schema.NullOr(Schema.String),
@@ -38,8 +32,6 @@ export const CreditNoteSchema = Schema.Struct({
   discount: Schema.NullOr(Schema.Number),
   taxable_value: Schema.NullOr(Schema.Number),
 
-  // --- From OrderTaxInfo ---
-  // We flatten the container, but keep the complex tax objects to avoid naming collisions
   igst: Schema.NullOr(
     Schema.Struct({
       rate: Schema.Number,
@@ -75,4 +67,9 @@ export const CreditNoteSchema = Schema.Struct({
   grand_total: Schema.NullOr(Schema.Number),
 });
 
-// Export the Type
+// Create the Array Schema
+export const CreditNotesArraySchema = Schema.Array(CreditNoteSchema);
+
+// Update your TypeScript types
+export type CreditNote = Schema.Schema.Type<typeof CreditNoteSchema>;
+export type CreditNotesArray = Schema.Schema.Type<typeof CreditNotesArraySchema>;

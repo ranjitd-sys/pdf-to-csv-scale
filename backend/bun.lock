@@ -6,7 +6,6 @@
       "name": "pdf-second",
       "dependencies": {
         "@effect/opentelemetry": "^0.61.0",
-        "@effect/schema": "^0.75.5",
         "@fastify/busboy": "^3.2.0",
         "@fastify/cors": "^11.2.0",
         "@fastify/multipart": "^9.4.0",
@@ -16,7 +15,7 @@
         "@opentelemetry/sdk-trace-node": "^2.5.0",
         "@opentelemetry/sdk-trace-web": "^2.5.0",
         "csv-stringify": "^6.6.0",
-        "effect": "^3.19.16",
+        "effect": "^3.19.17",
         "exceljs": "^4.4.0",
         "fastify": "^5.7.4",
         "unpdf": "^1.4.0",
@@ -33,8 +32,6 @@
     "@effect/opentelemetry": ["@effect/opentelemetry@0.61.0", "", { "peerDependencies": { "@effect/platform": "^0.94.2", "@opentelemetry/api": "^1.9", "@opentelemetry/resources": "^2.0.0", "@opentelemetry/sdk-logs": ">=0.203.0 <0.300.0", "@opentelemetry/sdk-metrics": "^2.0.0", "@opentelemetry/sdk-trace-base": "^2.0.0", "@opentelemetry/sdk-trace-node": "^2.0.0", "@opentelemetry/sdk-trace-web": "^2.0.0", "@opentelemetry/semantic-conventions": "^1.33.0", "effect": "^3.19.15" } }, "sha512-aTg4qWzMxGDoUZKSyws/dMZqVNoSCQIvHaPDJnWitUAVuWDAPOXiaiHJDWO39cwDlySBTCSF6rEanm3+nR/2Mg=="],
 
     "@effect/platform": ["@effect/platform@0.94.4", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.4", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.19.16" } }, "sha512-mK8pbskFAcBRA5Ooyt02kCBuWltZakyaDcM4ByTY0jXQMFC3NUveNK62JVH7XB+f3XZ8OoBBxUnlLben4plEKQ=="],
-
-    "@effect/schema": ["@effect/schema@0.75.5", "", { "dependencies": { "fast-check": "^3.21.0" }, "peerDependencies": { "effect": "^3.9.2" } }, "sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw=="],
 
     "@fast-csv/format": ["@fast-csv/format@4.3.5", "", { "dependencies": { "@types/node": "^14.0.1", "lodash.escaperegexp": "^4.1.2", "lodash.isboolean": "^3.0.3", "lodash.isequal": "^4.5.0", "lodash.isfunction": "^3.0.9", "lodash.isnil": "^4.0.0" } }, "sha512-8iRn6QF3I8Ak78lNAa+Gdl5MJJBM5vRHivFtMRUWINdevNo00K7OXxS2PshawLKTejVwieIlPmK5YlLu6w4u8A=="],
 
@@ -192,7 +189,7 @@
 
     "duplexer2": ["duplexer2@0.1.4", "", { "dependencies": { "readable-stream": "^2.0.2" } }, "sha512-asLFVfWWtJ90ZyOUHMqk7/S2w2guQKxUI2itj3d92ADHhxUSbCMGi1f1cBcJ7xM1To+pE/Khbwo1yuNbMEPKeA=="],
 
-    "effect": ["effect@3.19.16", "", { "dependencies": { "@standard-schema/spec": "^1.0.0", "fast-check": "^3.23.1" } }, "sha512-7+XC3vGrbAhCHd8LTFHvnZjRpZKZ8YHRZqJTkpNoxcJ2mCyNs2SwI+6VkV/ij8Y3YW7wfBN4EbU06/F5+m/wkQ=="],
+    "effect": ["effect@3.19.17", "", { "dependencies": { "@standard-schema/spec": "^1.0.0", "fast-check": "^3.23.1" } }, "sha512-MChgn9z0y3KJ2DJ+VsZt1bdVDJ0bDIZt9zm4s3iPpRLzgcEGDOIP8pwADjAWifaP0S672nlRE5rZPBbyDcjn1g=="],
 
     "end-of-stream": ["end-of-stream@1.4.5", "", { "dependencies": { "once": "^1.4.0" } }, "sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg=="],
 

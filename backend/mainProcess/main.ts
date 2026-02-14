@@ -20,7 +20,9 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
-import { CreditNoteSchema } from "./schema";
+import { CreditNotesArraySchema, CreditNoteSchema } from "./schema";
+import { decodeUnknown } from "effect/Duration";
+
 
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
@@ -64,44 +66,39 @@ export const Process = Effect.gen(function* () {
             ...tax,
           };
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
-        const validData = Schema.decodeUnknownSync(CreditNoteSchema)(TotalCreditNotes)
-        CrediNotes.push(TotalCreditNotes)
+        const validData =
+          Schema.decodeUnknownSync(CreditNoteSchema)(TotalCreditNotes);
+        CrediNotes.push(TotalCreditNotes);
         console.log(TotalCreditNotes);
         CreditNoteCount++;
       } else {
-        for (let data of rawBytes.text) {
+        const clean = data.replace(/\r/g, "").trim();
+        const orderMatch = clean.match(/\s*\n\s*(\d{12,})/);
 
-          const clean = data.replace(/\r/g, "").trim()
-          const orderMatch = clean.match(/\s*\n\s*(\d{12,})/);
+        const orderNumber = orderMatch ? orderMatch[0] : "Unknown";
 
-          const orderNumber = orderMatch ?  orderMatch[0] : "Unknown";
+        const Invoices = yield* Effect.gen(function* () {
+          const res = yield* separateTaxInvoice(data);
+          const bill = extractInvoice(res.Bill_detail || "");
+          const shipInfo = invoiceExtractShip(res.ship_to || "");
+          const product = InvoiceextractProduct(res.product || "");
+          const tax = parseTaxSection(res.taxes || "");
+          const seller = extractSellerDetails(res.sold_by || "");
+          const InvoiceDates = extractInvoiceDates(res.order || "");
 
+          return {
+            ...bill,
+            ...shipInfo,
+            ...product,
+            ...seller,
+            ...tax,
+            ...InvoiceDates,
+          };
+        }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`));
 
-          const Invoices = yield* Effect.gen(function * (){
-            const res = yield* separateTaxInvoice(data);
-            const bill = extractInvoice(res.Bill_detail || "");
-            const shipInfo = invoiceExtractShip(res.ship_to || "");
-            const product = InvoiceextractProduct(res.product || "");
-            const tax = parseTaxSection(res.taxes || "");
-            const seller = extractSellerDetails(res.sold_by || "");
-            const InvoiceDates = extractInvoiceDates(res.order || "");
-
-            
-           return {
-              ...bill,
-              ...shipInfo,
-              ...product,
-              ...seller,
-              ...tax,
-              ...InvoiceDates,
-            };
-          }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`))
-
-          TaxInvoice.push(Invoices);
-       
-        }
-        TaxInvoiceCount++;
+        TaxInvoice.push(Invoices);
       }
+      TaxInvoiceCount++;
     }
   }
   console.log("Tax Invoice ", TaxInvoiceCount);
@@ -111,10 +108,16 @@ export const Process = Effect.gen(function* () {
     "credit_note.count": CreditNoteCount,
     "tax_invoice.count": TaxInvoiceCount,
   });
-  return { CrediNotes, TaxInvoice, TaxInvoiceCount, CreditNoteCount };
+  const validate = yield* (
+    Schema.decodeUnknown(CreditNotesArraySchema)(CrediNotes)
+  );
+  console.log(validate)
+  return {  CrediNotes, TaxInvoice, TaxInvoiceCount, CreditNoteCount };
 }).pipe(
   Effect.withSpan("PDF_Processing_Pipeline", {
     attributes: { "peer.service": "DocumentProcessor" },
   }),
 );
 
+const data = await Effect.runPromise(Process);
+console.log(data)
