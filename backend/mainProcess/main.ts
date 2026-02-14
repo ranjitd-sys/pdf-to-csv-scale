@@ -20,6 +20,7 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
+import { CreditNoteSchema } from "./schema";
 
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
@@ -63,7 +64,8 @@ export const Process = Effect.gen(function* () {
             ...tax,
           };
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
-        CrediNotes.push(TotalCreditNotes);
+        const validData = Schema.decodeUnknownSync(CreditNoteSchema)(TotalCreditNotes)
+        CrediNotes.push(TotalCreditNotes)
         console.log(TotalCreditNotes);
         CreditNoteCount++;
       } else {
@@ -83,7 +85,8 @@ export const Process = Effect.gen(function* () {
             const tax = parseTaxSection(res.taxes || "");
             const seller = extractSellerDetails(res.sold_by || "");
             const InvoiceDates = extractInvoiceDates(res.order || "");
-  
+
+            
            return {
               ...bill,
               ...shipInfo,

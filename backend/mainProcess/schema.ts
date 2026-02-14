@@ -1,58 +1,78 @@
-import { Schema } from "@effect/schema";
+import { Schema } from "effect";
 
 export const CreditNoteSchema = Schema.Struct({
-  // --- Identifiers & Dates ---
-  order_number: Schema.String,
-  order_date: Schema.Union(Schema.Date, Schema.String), // Accepts Date obj or ISO string
-  credit_note_no: Schema.optional(Schema.String), // Optional in case it doesn't exist
-  credit_note_date: Schema.optional(Schema.Union(Schema.Date, Schema.String)),
-  invoice_no: Schema.String,
-  invoice_date: Schema.Union(Schema.Date, Schema.String),
+  // --- From umber ---S
+  order_number: Schema.optional(Schema.String),
+  order_date: Schema.optional(Schema.String),
+  credit_note_no: Schema.optional(Schema.String),
+  credit_note_date: Schema.optional(Schema.String),
+  invoice_no: Schema.optional(Schema.String),
+  invoice_date: Schema.optional(Schema.String),
 
-  // --- Seller Details ---
-  seller_name: Schema.String,
-  seller_city: Schema.String,
-  seller_state: Schema.String,
-  seller_pincode: Schema.Union(Schema.String, Schema.Number), // Pincodes can be strict strings or numbers
-  seller_gstin: Schema.String,
+  // --- From Seller (Nullable) ---
+  // Since the original 'Seller' object could be null, these fields are marked NullOr
+  seller_name: Schema.NullOr(Schema.String),
+  seller_city: Schema.NullOr(Schema.String),
+  seller_state: Schema.NullOr(Schema.String),
+  seller_pincode: Schema.NullOr(Schema.String),
+  seller_gstin: Schema.NullOr(Schema.String),
 
-  // --- Billing & Shipping ---
-  bill_name: Schema.String,
-  ship_name: Schema.String,
-  ship_state: Schema.String,
-  ship_pincode: Schema.Union(Schema.String, Schema.Number),
+  // --- From BillTo ---
+  Bill_name: Schema.NullOr(Schema.String),
+  place_of_supply_code: Schema.NullOr(Schema.String),
+  place_of_supply_state: Schema.NullOr(Schema.String),
+
+  // --- From Ship ---
+  ship_name: Schema.NullOr(Schema.String),
   ship_address: Schema.String,
+  ship_state: Schema.String,
+  ship_pincode: Schema.String,
 
-  // --- Product Details ---
-  quantity: Schema.Number,
-  product_name: Schema.String,
-  sku: Schema.String,
-  unit_price: Schema.Number,
-  discount: Schema.Number,
-  taxable_value: Schema.Number,
+  // --- From ParsedProduct (Nullable) ---
+  // These represent the main product line items
+  quantity: Schema.NullOr(Schema.Number),
+  name: Schema.NullOr(Schema.String),
+  sku: Schema.NullOr(Schema.String),
+  quantity_confirm: Schema.NullOr(Schema.Number),
+  unit_price: Schema.NullOr(Schema.Number),
+  discount: Schema.NullOr(Schema.Number),
+  taxable_value: Schema.NullOr(Schema.Number),
 
-  // --- Tax Breakdowns (IGST/SGST/CGST) ---
-  // Using Union because your code uses `?? ""`
-  igst_rate: Schema.Union(Schema.Number, Schema.Literal("")),
-  igst_amount: Schema.Union(Schema.Number, Schema.Literal("")),
-
-  sgst_rate: Schema.Union(Schema.Number, Schema.Literal("")),
-  sgst_amount: Schema.Union(Schema.Number, Schema.Literal("")),
-
-  cgst_rate: Schema.Union(Schema.Number, Schema.Literal("")),
-  cgst_amount: Schema.Union(Schema.Number, Schema.Literal("")),
-
-  // --- Other Charges ---
-  other_charge_unit_price: Schema.Union(Schema.Number, Schema.Literal("")),
-  other_charge_taxable_value: Schema.Union(Schema.Number, Schema.Literal("")),
-  other_charge_tax_type: Schema.String, // Likely a string if it exists
-  other_charge_tax_rate: Schema.Union(Schema.Number, Schema.Literal("")),
-  other_charge_tax_amount: Schema.Union(Schema.Number, Schema.Literal("")),
-
-  // --- Totals ---
-  total_tax: Schema.Number,
-  grand_total: Schema.Number,
+  // --- From OrderTaxInfo ---
+  // We flatten the container, but keep the complex tax objects to avoid naming collisions
+  igst: Schema.NullOr(
+    Schema.Struct({
+      rate: Schema.Number,
+      amount: Schema.Number,
+    })
+  ),
+  sgst: Schema.NullOr(
+    Schema.Struct({
+      rate: Schema.Number,
+      amount: Schema.Number,
+    })
+  ),
+  cgst: Schema.NullOr(
+    Schema.Struct({
+      rate: Schema.Number,
+      amount: Schema.Number,
+    })
+  ),
+  other_charges: Schema.NullOr(
+    Schema.Struct({
+      line_no: Schema.Number,
+      description: Schema.String,
+      code: Schema.String,
+      unit_price: Schema.Number,
+      taxable_value: Schema.Number,
+      tax_type: Schema.String,
+      tax_rate: Schema.Number,
+      tax_amount: Schema.Number,
+      line_total: Schema.Number,
+    })
+  ),
+  total_tax: Schema.NullOr(Schema.Number),
+  grand_total: Schema.NullOr(Schema.Number),
 });
 
-// Extract the TypeScript Type
-export type CreditNote  = Schema.Schema.Type<typeof CreditNoteSchema>;
+// Export the Type
