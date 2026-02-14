@@ -1,6 +1,5 @@
 import { Schema } from "effect";
 
-// Keep your individual struct definition
 export const CreditNoteSchema = Schema.Struct({
   order_number: Schema.optional(Schema.String),
   order_date: Schema.optional(Schema.String),
@@ -67,9 +66,7 @@ export const CreditNoteSchema = Schema.Struct({
   grand_total: Schema.NullOr(Schema.Number),
 });
 
-// Create the Array Schema
 export const CreditNotesArraySchema = Schema.Array(CreditNoteSchema);
 
-// Update your TypeScript types
 export type CreditNote = Schema.Schema.Type<typeof CreditNoteSchema>;
 export type CreditNotesArray = Schema.Schema.Type<typeof CreditNotesArraySchema>;

@@ -2,6 +2,7 @@ import { Effect, Schema } from "effect";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { extractText } from "unpdf";
+
 import {
   parseCreditNoteMeta,
   extractSoldBy,
@@ -20,9 +21,9 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
-import { CreditNotesArraySchema, CreditNoteSchema } from "./schema";
-import { decodeUnknown } from "effect/Duration";
 
+import {  CreditNoteSchema } from "./schema";
+import { decodeUnknown } from "effect/Duration";
 
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
@@ -66,10 +67,9 @@ export const Process = Effect.gen(function* () {
             ...tax,
           };
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
-        const validData =
-          Schema.decodeUnknownSync(CreditNoteSchema)(TotalCreditNotes);
+        // const validData = yield* Schema.decodeUnknownSync(CreditNoteSchema)(TotalCreditNotes)
         CrediNotes.push(TotalCreditNotes);
-        console.log(TotalCreditNotes);
+        console.log(CrediNotes);
         CreditNoteCount++;
       } else {
         const clean = data.replace(/\r/g, "").trim();
@@ -86,7 +86,7 @@ export const Process = Effect.gen(function* () {
           const seller = extractSellerDetails(res.sold_by || "");
           const InvoiceDates = extractInvoiceDates(res.order || "");
 
-          return {
+          const result = {
             ...bill,
             ...shipInfo,
             ...product,
@@ -94,6 +94,12 @@ export const Process = Effect.gen(function* () {
             ...tax,
             ...InvoiceDates,
           };
+          const decoded = yield* Schema.decodeUnknown(CreditNoteSchema)(
+            result,
+          ).pipe(Effect.mapError(() => new Error("Invalid Data")));
+          Effect.sync(()=>{
+            Effect.log(decoded);
+          })
         }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`));
 
         TaxInvoice.push(Invoices);
@@ -108,16 +114,10 @@ export const Process = Effect.gen(function* () {
     "credit_note.count": CreditNoteCount,
     "tax_invoice.count": TaxInvoiceCount,
   });
-  const validate = yield* (
-    Schema.decodeUnknown(CreditNotesArraySchema)(CrediNotes)
-  );
-  console.log(validate)
-  return {  CrediNotes, TaxInvoice, TaxInvoiceCount, CreditNoteCount };
+
+  return { CrediNotes, TaxInvoice, TaxInvoiceCount, CreditNoteCount };
 }).pipe(
   Effect.withSpan("PDF_Processing_Pipeline", {
     attributes: { "peer.service": "DocumentProcessor" },
   }),
 );
-
-const data = await Effect.runPromise(Process);
-console.log(data)
