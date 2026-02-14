@@ -22,7 +22,7 @@ import {
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
 
-import {  CreditNoteSchema } from "./schema";
+import { CreditNoteSchema, InvoiceSchema } from "./schema";
 import { decodeUnknown } from "effect/Duration";
 
 export const Process = Effect.gen(function* () {
@@ -58,7 +58,7 @@ export const Process = Effect.gen(function* () {
           const Product = ExtractProduct(res.product || "");
           const tax = parseTaxSection(res.taxes || "");
 
-          return {
+          const allCdata = {
             ...Credit_Note,
             ...Sold,
             ...Bill,
@@ -66,8 +66,15 @@ export const Process = Effect.gen(function* () {
             ...Product,
             ...tax,
           };
+
+          const Validate = yield* Schema.decodeUnknown(CreditNoteSchema)(
+            allCdata,
+          ).pipe(Effect.mapError(() => new Error("Invalid Tax Invoice Data")));
+
+          Effect.sync(() => {
+            Effect.log(Validate);
+          });
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
-        // const validData = yield* Schema.decodeUnknownSync(CreditNoteSchema)(TotalCreditNotes)
         CrediNotes.push(TotalCreditNotes);
         console.log(CrediNotes);
         CreditNoteCount++;
@@ -86,7 +93,7 @@ export const Process = Effect.gen(function* () {
           const seller = extractSellerDetails(res.sold_by || "");
           const InvoiceDates = extractInvoiceDates(res.order || "");
 
-          const result = {
+          const allTaxData = {
             ...bill,
             ...shipInfo,
             ...product,
@@ -94,12 +101,13 @@ export const Process = Effect.gen(function* () {
             ...tax,
             ...InvoiceDates,
           };
-          const decoded = yield* Schema.decodeUnknown(CreditNoteSchema)(
-            result,
-          ).pipe(Effect.mapError(() => new Error("Invalid Data")));
-          Effect.sync(()=>{
-            Effect.log(decoded);
-          })
+          const Validate = Schema.decodeUnknown(InvoiceSchema)(allTaxData).pipe(
+            Effect.mapError(() => new Error("Invalid Tax Invoice Data")),
+          );
+
+          Effect.sync(() => {
+            Effect.log(Validate);
+          });
         }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`));
 
         TaxInvoice.push(Invoices);
