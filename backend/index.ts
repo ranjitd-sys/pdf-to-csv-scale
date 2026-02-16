@@ -45,8 +45,9 @@ fastify.post("/upload", async (req, res) => {
         filePath = path.join(UPLOAD_DIR, safeFile);
         await pipeline(part.file, createWriteStream(filePath));
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        //@ts-ignore
-        await Effect.runPromise(CSV.pipe(Effect.provide(NodeSdkLive)));
+        
+        const Process =  await Effect.runPromise(CSV.pipe(Effect.provide(NodeSdkLive)));
+        console.log("data",Process)
         return {
           status: "SUCCESS",
           message: "Data Parse Sussessfully",
@@ -62,8 +63,12 @@ fastify.post("/upload", async (req, res) => {
       processedParams: options,
     };
   } catch (e) {
-    res.status(500).send({ status: "ERROR", message: "Pipeline failure" });
-    console.log(e);
+    // res.status(500).send({ status: "ERROR", message: "Pipeline failure" });
+    if(e instanceof Error){
+      if(e.message === "Invalid Credit Note Data"){
+        res.status(422).send({status:"Invalid Data", "Message":"Kindly Upload Valid Zip"})
+      }
+    }
   } finally {
     await $`rm -rf ./out`;
     await $`rm -rf ./uploads`;

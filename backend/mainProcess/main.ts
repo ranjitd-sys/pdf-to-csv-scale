@@ -118,16 +118,17 @@ export const Process = Effect.gen(function* () {
   const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
     CrediNotes,
   ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
-  const TaxxInvoiceVallidate = yield* Schema.decodeUnknown(InvoiceArraySchema)(
+  const TaxInvoiceVallidate = yield* Schema.decodeUnknown(InvoiceArraySchema)(
     TaxInvoice,
   ).pipe(Effect.mapError(() => new Error("Invalid Tax Invoice Data")));
 
   return {
     CrediNotes,
     TaxInvoice,
-    TaxInvoiceCount,
+    TaxInvoiceCount,    
     CreditNoteCount,
     CreditValidate,
+    TaxInvoiceVallidate
   };
 }).pipe(
   Effect.withSpan("PDF_Processing_Pipeline", {
