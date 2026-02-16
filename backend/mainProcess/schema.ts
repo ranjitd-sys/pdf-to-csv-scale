@@ -66,9 +66,6 @@ export const CreditNoteSchema = Schema.Struct({
   grand_total: Schema.NullOr(Schema.Number),
 });
 
-
-
-
 export const InvoiceSchema = Schema.Struct({
   // ==========================================
   // 1. From InvoiceDates (Undefined allowed)
@@ -159,11 +156,14 @@ export const InvoiceSchema = Schema.Struct({
   grand_total: Schema.NullOr(Schema.Number),
 });
 
+//next part to follew
+export const TaxValidation = Schema.Struct({
 
-// Create the Array version for lists of invoices
+})
+
 export const InvoiceArraySchema = Schema.Array(InvoiceSchema);
 
-// Export the inferred types
+
 export type Invoice = Schema.Schema.Type<typeof InvoiceSchema>;
 export type InvoiceList = Schema.Schema.Type<typeof InvoiceArraySchema>;
 

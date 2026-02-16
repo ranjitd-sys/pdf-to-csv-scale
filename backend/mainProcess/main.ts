@@ -92,7 +92,7 @@ export const Process = Effect.gen(function* () {
             const total_tax = tax.total_tax || 0;
             const secondTAx  = tax.other_charges?.line_total || 0;
             const taxableProductPrice = Product?.taxable_value || 0;
-            
+            console.log(tax)
             console.log(( taxableProductPrice + total_tax), tax.grand_total);
             console.log("toerh vlid ",tax.other_charges)
             return { type: "Credit", data: result };
