@@ -21,7 +21,7 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
-import { CreditNoteSchema, InvoiceSchema } from "./schema";
+import { CreditNoteSchema, InvoiceSchema, type Invoice } from "./schema";
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
   let TaxInvoiceCount = 0;
@@ -71,6 +71,7 @@ export const Process = Effect.gen(function* () {
           Effect.sync(() => {
             Effect.log(Validate);
           });
+          return allCdata;
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
         CrediNotes.push(TotalCreditNotes);
         console.log(CrediNotes);
@@ -105,6 +106,7 @@ export const Process = Effect.gen(function* () {
           Effect.sync(() => {
             Effect.log(Validate);
           });
+          return allTaxData;
         }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`));
 
         TaxInvoice.push(Invoices);
