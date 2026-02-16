@@ -21,7 +21,13 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
-import { CreditNoteSchema, InvoiceSchema, type Invoice } from "./schema";
+import {
+  CreditNotesArraySchema,
+  CreditNoteSchema,
+  InvoiceArraySchema,
+  InvoiceSchema,
+  type Invoice,
+} from "./schema";
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
   let TaxInvoiceCount = 0;
@@ -64,13 +70,6 @@ export const Process = Effect.gen(function* () {
             ...tax,
           };
 
-          const Validate = yield* Schema.decodeUnknown(CreditNoteSchema)(
-            allCdata,
-          ).pipe(Effect.mapError(() => new Error("Invalid Tax Invoice Data")));
-
-          Effect.sync(() => {
-            Effect.log(Validate);
-          });
           return allCdata;
         }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
         CrediNotes.push(TotalCreditNotes);
@@ -99,13 +98,7 @@ export const Process = Effect.gen(function* () {
             ...tax,
             ...InvoiceDates,
           };
-          const Validate = Schema.decodeUnknown(InvoiceSchema)(allTaxData).pipe(
-            Effect.mapError(() => new Error("Invalid Tax Invoice Data")),
-          );
 
-          Effect.sync(() => {
-            Effect.log(Validate);
-          });
           return allTaxData;
         }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`));
 
@@ -122,7 +115,20 @@ export const Process = Effect.gen(function* () {
     "tax_invoice.count": TaxInvoiceCount,
   });
 
-  return { CrediNotes, TaxInvoice, TaxInvoiceCount, CreditNoteCount };
+  const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
+    CrediNotes,
+  ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
+  const TaxxInvoiceVallidate = yield* Schema.decodeUnknown(InvoiceArraySchema)(
+    TaxInvoice,
+  ).pipe(Effect.mapError(() => new Error("Invalid Tax Invoice Data")));
+
+  return {
+    CrediNotes,
+    TaxInvoice,
+    TaxInvoiceCount,
+    CreditNoteCount,
+    CreditValidate,
+  };
 }).pipe(
   Effect.withSpan("PDF_Processing_Pipeline", {
     attributes: { "peer.service": "DocumentProcessor" },
