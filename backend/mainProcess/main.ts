@@ -2,6 +2,10 @@ import { Effect, Schema } from "effect";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { extractText } from "unpdf";
+const traced =
+  (name: string, attributes?: Record<string, unknown>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    effect.pipe(Effect.withSpan(name, { attributes }));
 
 import {
   parseCreditNoteMeta,
@@ -26,83 +30,110 @@ export const Process = Effect.gen(function* () {
   const folderPath = "./out";
   let TaxInvoiceCount = 0;
   let CreditNoteCount = 0;
-  let CrediNotes: any[] = [];
-  let TaxInvoice: any[] = [];
-  const files = yield* Effect.promise(() => readdir(folderPath));
+  // let CrediNotes: any[] = [];
+  // let TaxInvoice: any[] = [];
+  const files = yield* traced("Read_Directory")(
+    Effect.promise(() => readdir(folderPath)),
+  );
   const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
+
   if (pdfFiles.length === 0) {
-    return Effect.mapError((error) => new Error("We only process PDF"));
+    return yield* Effect.fail(new Error("No PDF files found"));
   }
-  for (const pdf of pdfFiles) {
-    const filePath = join(folderPath, pdf);
 
-    const data = yield* Effect.promise(() => Bun.file(filePath).arrayBuffer());
+  const allTextBlocks = yield* Effect.forEach(
+    pdfFiles,
+    (pdf) =>
+      Effect.gen(function* () {
+        const filePath = join(folderPath, pdf);
 
-    const rawBytes = yield* Effect.promise(() => extractText(data));
-    for (const data of rawBytes.text) {
-      if (data.includes("Credit Note")) {
-        const orderMatch = data.match(
-          /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i,
-        );
+        const buffer = yield* traced("Read_PDF_File", {
+          file: filePath,
+        })(Effect.promise(() => Bun.file(filePath).arrayBuffer()));
 
-        const orderNumber = orderMatch?.[2] ?? "Unknown";
+        const raw = yield* traced("Extract_Text", {
+          file: filePath,
+        })(Effect.promise(() => extractText(buffer)));
 
-        const TotalCreditNotes = yield* Effect.gen(function* () {
-          const res = yield* separateCreditNote(data);
+        return raw.text;
+      }),
+    { concurrency: 4 },
+  );
 
-          const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
-          const Sold = extractSoldBy(res.sold_by || "");
-          const Bill = extractBillTo(res.bill_to || "");
-          const Ship = extractShipTo(res.ship_to || "");
-          const Product = ExtractProduct(res.product || "");
-          const tax = parseTaxSection(res.taxes || "");
+  //Because it return sting array of array need to get rid of that one array
+  const flatText = allTextBlocks.flat();
 
-          const allCdata = {
-            ...Credit_Note,
-            ...Sold,
-            ...Bill,
-            ...Ship,
-            ...Product,
-            ...tax,
-          };
-
-          return allCdata;
-        }).pipe(Effect.withSpan(`Credit Note Proessing for ${orderNumber} `));
-        CrediNotes.push(TotalCreditNotes);
-        console.log(CrediNotes);
-        CreditNoteCount++;
-      } else {
+  const result = yield* Effect.forEach(
+    flatText,
+    (data, index) =>
+      Effect.gen(function* () {
         const clean = data.replace(/\r/g, "").trim();
-        const orderMatch = clean.match(/\s*\n\s*(\d{12,})/);
+        const isCredit = clean.includes("Credit Note");
 
-        const orderNumber = orderMatch ? orderMatch[0] : "Unknown";
+        return yield* Effect.gen(function* () {
+          if (isCredit) {
+            const res = yield* traced("Shaparate_Credit_Not")(
+              separateCreditNote(clean),
+            );
 
-        const Invoices = yield* Effect.gen(function* () {
-          const res = yield* separateTaxInvoice(data);
-          const bill = extractInvoice(res.Bill_detail || "");
-          const shipInfo = invoiceExtractShip(res.ship_to || "");
-          const product = InvoiceextractProduct(res.product || "");
-          const tax = parseTaxSection(res.taxes || "");
-          const seller = extractSellerDetails(res.sold_by || "");
-          const InvoiceDates = extractInvoiceDates(res.order || "");
+            const Credit_Note = parseCreditNoteMeta(res.credit_note || "");
+            const Sold = extractSoldBy(res.sold_by || "");
+            const Bill = extractBillTo(res.bill_to || "");
+            const Ship = extractShipTo(res.ship_to || "");
+            const Product = ExtractProduct(res.product || "");
+            const tax = parseTaxSection(res.taxes || "");
 
-          const allTaxData = {
-            ...bill,
-            ...shipInfo,
-            ...product,
-            ...seller,
-            ...tax,
-            ...InvoiceDates,
-          };
+            const result = {
+              ...Credit_Note,
+              ...Sold,
+              ...Bill,
+              ...Ship,
+              ...Product,
+              ...tax,
+            };
+            return { type: "Credit", data: result };
+          } else {
+            const clean = data.replace(/\r/g, "").trim();
 
-          return allTaxData;
-        }).pipe(Effect.withSpan(`Tax Invoices Procsssing for ${orderNumber}`));
+            const res = yield* separateTaxInvoice(clean);
+            const bill = extractInvoice(res.Bill_detail || "");
+            const shipInfo = invoiceExtractShip(res.ship_to || "");
+            const product = InvoiceextractProduct(res.product || "");
+            const tax = parseTaxSection(res.taxes || "");
+            const seller = extractSellerDetails(res.sold_by || "");
+            const InvoiceDates = extractInvoiceDates(res.order || "");
 
-        TaxInvoice.push(Invoices);
-      }
-      TaxInvoiceCount++;
-    }
-  }
+            const result = {
+              ...bill,
+              ...shipInfo,
+              ...product,
+              ...seller,
+              ...tax,
+              ...InvoiceDates,
+            };
+            return { type: "invoice", data: result };
+          }
+        }).pipe(Effect.withSpan("Process_Document", {attributes:{
+          document_index:index,
+          document_type : isCredit ? "Credit" : "Invlice",
+          text_lenght:clean.length
+        }}))
+      }),
+
+    { concurrency: 8 },
+  );
+  const TotalCreditNotes = result
+    .filter((creditNote) => creditNote.type === "Credit")
+    .map((creditNotes) => creditNotes.data);
+
+  const ToalTaxInvoice = result
+    .filter((taxInvoice) => taxInvoice.type === "invoice")
+    .map((taxInvoide) => taxInvoide.data);
+
+  CreditNoteCount = TotalCreditNotes.length;
+  CreditNoteCount = ToalTaxInvoice.length;
+
+
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
 
@@ -111,16 +142,18 @@ export const Process = Effect.gen(function* () {
     "tax_invoice.count": TaxInvoiceCount,
   });
 
+  // all Schema Validation
   const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
-    CrediNotes,
+    TotalCreditNotes,
   ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
+
   const TaxInvoiceVallidate = yield* Schema.decodeUnknown(InvoiceArraySchema)(
-    TaxInvoice,
+    ToalTaxInvoice,
   ).pipe(Effect.mapError(() => new Error("Invalid Tax Invoice Data")));
 
   return {
-    CrediNotes,
-    TaxInvoice,
+    TotalCreditNotes,
+    ToalTaxInvoice,
     TaxInvoiceCount,
     CreditNoteCount,
     CreditValidate,

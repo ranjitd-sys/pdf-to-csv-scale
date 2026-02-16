@@ -57,11 +57,7 @@ fastify.post("/upload", async (req, res) => {
         options[part.fieldname] = part.value as string;
       }
     }
-    return {
-      status: "SUCCESS",
-      message: "Sussfully Converted to CSV",
-      processedParams: options,
-    };
+   
   } catch (e) {
     // res.status(500).send({ status: "ERROR", message: "Pipeline failure" });
     if(e instanceof Error){

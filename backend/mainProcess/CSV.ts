@@ -53,7 +53,7 @@ export const CSV = Effect.gen(function * () {
     { header: "Grand Total", key: "grand_total", width: 15 },
   ]
 
-  data.CrediNotes.forEach((item: any) => {
+  data.TotalCreditNotes.forEach((item: any) => {
     creditSheet.addRow({
       order_number: item.order_number,
       order_date: item.order_date,
@@ -128,7 +128,7 @@ export const CSV = Effect.gen(function * () {
     { header: "Grand Total", key: "grand_total", width: 15 },
   ]
 
-  data.TaxInvoice.forEach((invoice: any) => {
+  data.ToalTaxInvoice.forEach((invoice: any) => {
     taxSheet.addRow({
       order_number: invoice.order_number,
       invoice_number: invoice.invoice_number,
