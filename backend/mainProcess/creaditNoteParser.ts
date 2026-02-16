@@ -1,53 +1,60 @@
-import { Effect, Schema } from "effect"
-import type {BillTo,CreditNoteMeta, OrderTaxInfo, OtherCharge, ParsedProduct, Seller, Ship, TaxDetail, } from "./Credittypes"
-import { ValidateOrderID } from "./BrandedTypes"
-import { validDate } from "effect/Schema"
-export const parseCreditNoteMeta = (text: string):CreditNoteMeta =>  {
+import { Effect, Order, Schema } from "effect";
+import type {
+  BillTo,
+  CreditNoteMeta,
+  OrderTaxInfo,
+  OtherCharge,
+  ParsedProduct,
+  Seller,
+  Ship,
+  TaxDetail,
+} from "./Credittypes";
+import { CreditNoteId, OrderId } from "./BrandedTypes";
+import { validDate } from "effect/Schema";
+export const parseCreditNoteMeta = (text: string): CreditNoteMeta => {
+  const orderNumber = text.match(
+    /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i,
+  )?.[2];
 
-  const orderNumber= text.match(
-    /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i
-  )?.[2]
-
-  const orderDate = text.match(
-    /Order\s+Date\s*:\s*([\d-]+\s+[\d:]+)/i
-  )?.[1]
+  const orderDate = text.match(/Order\s+Date\s*:\s*([\d-]+\s+[\d:]+)/i)?.[1];
 
   const creditNoteNo = text.match(
-    /Credit\s+Note\s+(No|Number)\s*:\s*(\S+)/i
-  )?.[2]
+    /Credit\s+Note\s+(No|Number)\s*:\s*(\S+)/i,
+  )?.[2];
 
   const creditNoteDate = text.match(
-    /Credit\s+Note\s+Date\s*:\s*([\d-]+\s+[\d:]+)/i
-  )?.[1]
+    /Credit\s+Note\s+Date\s*:\s*([\d-]+\s+[\d:]+)/i,
+  )?.[1];
 
   const invoiceMatch = text.match(
-    /Invoice\s+No\s+and\s+Date\s*:\s*(\S+)\s+([\d-]+\s+[\d:]+)/i
-  )
-   const order_number = orderNumber
-      ? Schema.decodeUnknownSync(ValidateOrderID)(orderNumber.trim())
-      : null
+    /Invoice\s+No\s+and\s+Date\s*:\s*(\S+)\s+([\d-]+\s+[\d:]+)/i,
+  );
+  const order_number = orderNumber
+    ? Schema.decodeUnknownSync(OrderId)(orderNumber.trim())
+    : undefined;
+
+  const credit_note_no = creditNoteNo
+    ? Schema.decodeUnknownSync(CreditNoteId)(creditNoteNo.trim())
+    : undefined;
   return {
-    order_number:order_number || undefined,
+    order_number: order_number,
     order_date: orderDate,
-    credit_note_no: creditNoteNo,
+    credit_note_no : credit_note_no,
     credit_note_date: creditNoteDate,
     invoice_no: invoiceMatch?.[1],
     invoice_date: invoiceMatch?.[2],
-  }
-}
+  };
+};
 
-
-export const extractSoldBy = (text: string):Seller => {
-
-
-  const clean = text.replace(/\r/g, "").trim()
+export const extractSoldBy = (text: string): Seller => {
+  const clean = text.replace(/\r/g, "").trim();
 
   const regex =
-    /SOLD BY:\s*\n([^\n]+)\n([^,]+),\s*([^,]+),\s*(\d{6})\nGSTIN\s*:\s*([A-Z0-9]+)/i
+    /SOLD BY:\s*\n([^\n]+)\n([^,]+),\s*([^,]+),\s*(\d{6})\nGSTIN\s*:\s*([A-Z0-9]+)/i;
 
-  const match = clean.match(regex)
+  const match = clean.match(regex);
 
-  if (!match) return null
+  if (!match) return null;
 
   return {
     seller_name: match[1]!.trim(),
@@ -55,63 +62,59 @@ export const extractSoldBy = (text: string):Seller => {
     seller_state: match[3]!.trim(),
     seller_pincode: match[4] || "",
     seller_gstin: match[5] || "",
-  }
-}
+  };
+};
 
-
-
-export function extractBillTo(text: string):BillTo {
-  const clean = text.replace(/\r/g, "").trim()
+export function extractBillTo(text: string): BillTo {
+  const clean = text.replace(/\r/g, "").trim();
 
   // Extract name (line after BILL TO:)
-  const nameMatch = clean.match(/BILL TO:\s*\n([^\n]+)/i)
+  const nameMatch = clean.match(/BILL TO:\s*\n([^\n]+)/i);
 
   // Extract place of supply
   const placeMatch = clean.match(
-    /Place of Supply\s*:\s*(\d+)\s+([A-Za-z\s]+)/i
-  )
+    /Place of Supply\s*:\s*(\d+)\s+([A-Za-z\s]+)/i,
+  );
 
   return {
     Bill_name: nameMatch ? nameMatch[1]!.trim() : null,
     place_of_supply_code: placeMatch ? placeMatch[1]!.trim() : null,
     place_of_supply_state: placeMatch ? placeMatch[2]!.trim() : null,
-  }
+  };
 }
 
+export function extractShipTo(text: string): Ship | null {
+  const block = text.split(/SHIP TO:/g)[1];
+  if (!block) return null;
 
-export function extractShipTo(text: string):Ship | null{
-  const block = text.split(/SHIP TO:/g)[1]
-  if (!block) return null
-
-  const cleaned = block.split(/SN\.\s*Description/i)[0]!.trim()
+  const cleaned = block.split(/SN\.\s*Description/i)[0]!.trim();
 
   const lines = cleaned
     .split("\n")
-    .map(l => l.trim())
-    .filter(Boolean)
+    .map((l) => l.trim())
+    .filter(Boolean);
 
-  if (!lines.length) return null
+  if (!lines.length) return null;
 
   const ship_name = lines[0] || null;
-  const fullText = lines.slice(1).join(" ")
+  const fullText = lines.slice(1).join(" ");
 
-  const match = fullText.match(/([A-Za-z\s]+),\s*(\d{6})\b/)
+  const match = fullText.match(/([A-Za-z\s]+),\s*(\d{6})\b/);
 
-  let ship_state = ""
-  let ship_pincode = ""
-  let ship_city = ""
-  let ship_address = fullText
+  let ship_state = "";
+  let ship_pincode = "";
+  let ship_city = "";
+  let ship_address = fullText;
 
   if (match) {
-    ship_state = match[1]!.trim()
-    ship_pincode = match[2] || ""
+    ship_state = match[1]!.trim();
+    ship_pincode = match[2] || "";
 
-    ship_address = fullText.replace(match[0], "").trim()
+    ship_address = fullText.replace(match[0], "").trim();
 
-    const cityMatch = ship_address.match(/,\s*([^,]+)\s*$/)
+    const cityMatch = ship_address.match(/,\s*([^,]+)\s*$/);
     if (cityMatch) {
-      
-      ship_address = ship_address.replace(/,\s*([^,]+)\s*$/, "").trim()
+      ship_address = ship_address.replace(/,\s*([^,]+)\s*$/, "").trim();
     }
   }
 
@@ -120,18 +123,16 @@ export function extractShipTo(text: string):Ship | null{
     ship_address,
     ship_state,
     ship_pincode,
-  }
+  };
 }
 
-
-
 export function ExtractProduct(rawText: string): ParsedProduct | null {
-  if (!rawText) return null
+  if (!rawText) return null;
 
   const cleaned = rawText
     .replace(/Taxes\s+Total/i, "")
     .replace(/\r/g, "")
-    .trim()
+    .trim();
 
   /**
    * Supports:
@@ -142,20 +143,20 @@ export function ExtractProduct(rawText: string): ParsedProduct | null {
    */
 
   const regex =
-    /^\s*(\d+)\s+([\s\S]+?)\s+(\d{5,})\s+(\d+)\s+Rs\.?\s?(\d+\.\d{2})(?:\s+Rs\.?\s?(\d+\.\d{2}))?\s+Rs\.?\s?(\d+\.\d{2})?\s*$/
+    /^\s*(\d+)\s+([\s\S]+?)\s+(\d{5,})\s+(\d+)\s+Rs\.?\s?(\d+\.\d{2})(?:\s+Rs\.?\s?(\d+\.\d{2}))?\s+Rs\.?\s?(\d+\.\d{2})?\s*$/;
 
-  const match = cleaned.match(regex)
+  const match = cleaned.match(regex);
 
-  if (!match) return null
+  if (!match) return null;
 
-  const quantity = Number(match[1])
-  const name = match[2]!.replace(/\s+/g, " ").trim()
-  const sku = match[3] || ""
-  const quantity_confirm = Number(match[4])
+  const quantity = Number(match[1]);
+  const name = match[2]!.replace(/\s+/g, " ").trim();
+  const sku = match[3] || "";
+  const quantity_confirm = Number(match[4]);
 
-  const firstPrice = Number(match[5])
-  const secondPrice = match[6] ? Number(match[6]) : null
-  const thirdPrice = match[7] ? Number(match[7]) : null
+  const firstPrice = Number(match[5]);
+  const secondPrice = match[6] ? Number(match[6]) : null;
+  const thirdPrice = match[7] ? Number(match[7]) : null;
 
   return {
     quantity,
@@ -163,12 +164,10 @@ export function ExtractProduct(rawText: string): ParsedProduct | null {
     sku,
     quantity_confirm,
     unit_price: firstPrice,
-    discount: thirdPrice ? secondPrice ?? 0 : 0,
+    discount: thirdPrice ? (secondPrice ?? 0) : 0,
     taxable_value: thirdPrice ?? secondPrice ?? 0,
-  }
+  };
 }
-
-
 
 export function parseTaxSection(text: string): OrderTaxInfo {
   const result = {
@@ -178,48 +177,42 @@ export function parseTaxSection(text: string): OrderTaxInfo {
     other_charges: null as OtherCharge | null,
     total_tax: null as number | null,
     grand_total: null as number | null,
-  }
+  };
 
   // ---------------- IGST ----------------
-  const igstMatch = text.match(
-    /IGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/
-  )
+  const igstMatch = text.match(/IGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/);
 
   if (igstMatch) {
     result.igst = {
       rate: Number(igstMatch[1]),
       amount: Number(igstMatch[2]),
-    }
+    };
   }
 
   // ---------------- SGST ----------------
-  const sgstMatch = text.match(
-    /SGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/
-  )
+  const sgstMatch = text.match(/SGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/);
 
   if (sgstMatch) {
     result.sgst = {
       rate: Number(sgstMatch[1]),
       amount: Number(sgstMatch[2]),
-    }
+    };
   }
 
   // ---------------- CGST ----------------
-  const cgstMatch = text.match(
-    /CGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/
-  )
+  const cgstMatch = text.match(/CGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/);
 
   if (cgstMatch) {
     result.cgst = {
       rate: Number(cgstMatch[1]),
       amount: Number(cgstMatch[2]),
-    }
+    };
   }
 
   // ---------------- OTHER CHARGES ----------------
   const otherChargesMatch = text.match(
-    /(\d+)\s+OTHER CHARGES\s+(\d+)\s+NA\s+Rs\.(\d+\.\d{2})\s+\d+\s+Rs\.(\d+\.\d{2})\s+(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})\s+Rs\.(\d+\.\d{2})/
-  )
+    /(\d+)\s+OTHER CHARGES\s+(\d+)\s+NA\s+Rs\.(\d+\.\d{2})\s+\d+\s+Rs\.(\d+\.\d{2})\s+(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})\s+Rs\.(\d+\.\d{2})/,
+  );
 
   if (otherChargesMatch) {
     result.other_charges = {
@@ -232,18 +225,16 @@ export function parseTaxSection(text: string): OrderTaxInfo {
       tax_rate: Number(otherChargesMatch[6]),
       tax_amount: Number(otherChargesMatch[7]),
       line_total: Number(otherChargesMatch[8]),
-    }
+    };
   }
 
   // ---------------- TOTAL ----------------
-  const totalMatch = text.match(
-    /Total\s+Rs\.(\d+\.\d{2})\s+Rs\.(\d+\.?\d*)/
-  )
+  const totalMatch = text.match(/Total\s+Rs\.(\d+\.\d{2})\s+Rs\.(\d+\.?\d*)/);
 
   if (totalMatch) {
-    result.total_tax = Number(totalMatch[1])
-    result.grand_total = Number(totalMatch[2])
+    result.total_tax = Number(totalMatch[1]);
+    result.grand_total = Number(totalMatch[2]);
   }
 
-  return result
+  return result;
 }
