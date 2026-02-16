@@ -92,16 +92,21 @@ export const Process = Effect.gen(function* () {
               ...tax,
             };
             const keys = ["sgst", "igst", "cgst", "other_charges"] as const;
-            const amounts = keys.flatMap((key) => {
-              const value = result[key];
-              if (!value) return [];
-              if ("amount" in value) {
-                return [value.amount];
-              }
-              // console.log("data",value)
-              return value.unit_price
-            });
-            console.log(tax)
+            
+            // const Valid_tax = keys.flatMap((key) => {
+            //   const value = result[key];
+            //   if (!value) return [];
+            //   if ("amount" in value) {
+            //     console.log("data",value.amount)
+            //     return [value.amount];
+            //   }
+
+            //   return value.unit_price 
+            // });
+            // console.log(result)
+            // const total_tax_amount = Valid_tax.reduce((sum, value)=>sum + value,0)
+            
+            // console.log((tax!.total_tax + Product!.taxable_value) , tax.grand_total)
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();
