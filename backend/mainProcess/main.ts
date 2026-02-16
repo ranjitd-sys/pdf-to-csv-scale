@@ -91,6 +91,17 @@ export const Process = Effect.gen(function* () {
               ...Product,
               ...tax,
             };
+            const keys = ["sgst", "igst", "cgst", "other_charges"] as const;
+            const amounts = keys.flatMap((key) => {
+              const value = result[key];
+              if (!value) return [];
+              if ("amount" in value) {
+                return [value.amount];
+              }
+              // console.log("data",value)
+              return value.unit_price
+            });
+            console.log(tax)
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();
@@ -111,28 +122,32 @@ export const Process = Effect.gen(function* () {
               ...tax,
               ...InvoiceDates,
             };
+
             return { type: "invoice", data: result };
           }
-        }).pipe(Effect.withSpan("Process_Document", {attributes:{
-          document_index:index,
-          document_type : isCredit ? "Credit" : "Invlice",
-          text_lenght:clean.length
-        }}))
+        }).pipe(
+          Effect.withSpan("Process_Document", {
+            attributes: {
+              document_index: index,
+              document_type: isCredit ? "Credit" : "Invlice",
+              text_lenght: clean.length,
+            },
+          }),
+        );
       }),
 
     { concurrency: 8 },
   );
   const TotalCreditNotes = result
     .filter((creditNote) => creditNote.type === "Credit")
-    .map((creditNotes) => creditNotes.data);
+    .map((creditNotes) => creditNotes?.data);
 
   const ToalTaxInvoice = result
     .filter((taxInvoice) => taxInvoice.type === "invoice")
     .map((taxInvoide) => taxInvoide.data);
 
   CreditNoteCount = TotalCreditNotes.length;
-  CreditNoteCount = ToalTaxInvoice.length;
-
+  TaxInvoiceCount = ToalTaxInvoice.length;
 
   console.log("Tax Invoice ", TaxInvoiceCount);
   console.log("Credit Note", CreditNoteCount);
@@ -165,4 +180,4 @@ export const Process = Effect.gen(function* () {
   }),
 );
 const data = await Effect.runPromise(Process);
-console.log(data)
+// console.log(data)ss

@@ -9,7 +9,7 @@ import type {
   Ship,
   TaxDetail,
 } from "./Credittypes";
-import { CreditNoteId, OrderId } from "./BrandedTypes";
+import { CreditNoteId, GstNumber, OrderId } from "./BrandedTypes";
 import { validDate } from "effect/Schema";
 export const parseCreditNoteMeta = (text: string): CreditNoteMeta => {
   const orderNumber = text.match(
@@ -32,11 +32,13 @@ export const parseCreditNoteMeta = (text: string): CreditNoteMeta => {
   const order_number = orderNumber
     ? Schema.decodeUnknownSync(OrderId)(orderNumber.trim())
     : undefined;
-  const creditNumber = creditNoteNo ? Schema.decodeUnknownSync(CreditNoteId)(creditNoteNo):undefined
+  const creditNumber = creditNoteNo
+    ? Schema.decodeUnknownSync(CreditNoteId)(creditNoteNo)
+    : undefined;
   return {
     order_number: order_number,
     order_date: orderDate,
-    credit_note_no : creditNumber,
+    credit_note_no: creditNumber,
     credit_note_date: creditNoteDate,
     invoice_no: invoiceMatch?.[1],
     invoice_date: invoiceMatch?.[2],
@@ -52,13 +54,13 @@ export const extractSoldBy = (text: string): Seller => {
   const match = clean.match(regex);
 
   if (!match) return null;
-
+  const gstNumber = Schema.decodeUnknownSync(GstNumber)(match[5]);
   return {
     seller_name: match[1]!.trim(),
     seller_city: match[2]!.trim(),
     seller_state: match[3]!.trim(),
     seller_pincode: match[4] || "",
-    seller_gstin: match[5] || "",
+    seller_gstin: gstNumber,
   };
 };
 
