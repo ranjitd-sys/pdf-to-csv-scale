@@ -32,11 +32,11 @@ export const parseCreditNoteMeta = (text: string): CreditNoteMeta => {
   const order_number = orderNumber
     ? Schema.decodeUnknownSync(OrderId)(orderNumber.trim())
     : undefined;
-
+  const creditNumber = creditNoteNo ? Schema.decodeUnknownSync(CreditNoteId)(creditNoteNo):undefined
   return {
     order_number: order_number,
     order_date: orderDate,
-    credit_note_no : creditNoteNo,
+    credit_note_no : creditNumber,
     credit_note_date: creditNoteDate,
     invoice_no: invoiceMatch?.[1],
     invoice_date: invoiceMatch?.[2],

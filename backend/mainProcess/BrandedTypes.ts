@@ -6,8 +6,9 @@ export const OrderId = Schema.String.pipe(
 );
 
 export const CreditNoteId = Schema.String.pipe(
-  Schema.pattern(/^[A-Za-z0-9]{10}$/),
+  Schema.pattern(/^[A-Za-z0-9]{11}$/),
   Schema.brand("CreditNoteId")
 );
-export type Credit_note_id = typeof CreditNoteId.Type;
+
+export type CreditNote_id = typeof CreditNoteId.Type;
 export type Order_id = typeof OrderId.Type;
