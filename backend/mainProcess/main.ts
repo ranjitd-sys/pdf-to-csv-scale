@@ -164,3 +164,5 @@ export const Process = Effect.gen(function* () {
     attributes: { "peer.service": "DocumentProcessor" },
   }),
 );
+const data = await Effect.runPromise(Process);
+console.log(data)

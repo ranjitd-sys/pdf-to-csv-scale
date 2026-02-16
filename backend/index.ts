@@ -66,8 +66,8 @@ fastify.post("/upload", async (req, res) => {
       }
     }
   } finally {
-    await $`rm -rf ./out`;
-    await $`rm -rf ./uploads`;
+    // await $`rm -rf ./out`;
+    // await $`rm -rf ./uploads`;
   }
 });
 
