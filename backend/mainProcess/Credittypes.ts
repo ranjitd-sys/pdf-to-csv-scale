@@ -1,5 +1,7 @@
+import type { Order_id } from "./BrandedTypes";
+
 export type CreditNoteMeta = {
-  order_number?: string;
+  order_number?: Order_id;
   order_date?: string;
   credit_note_no?: string;
   credit_note_date?: string;

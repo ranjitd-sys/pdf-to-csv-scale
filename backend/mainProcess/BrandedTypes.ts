@@ -1,13 +1,12 @@
-import { Schema } from "effect"
-import { Effect } from "effect"
-// Step 1: Base schema
-const UserId = Schema.String.pipe(
-  Schema.brand("UserId")
+import { Effect, Order, Schema } from "effect"
+
+
+export const ValidateOrderID = Schema.String.pipe(
+   Schema.pattern(/^\d{18}$/),
+  Schema.brand("OrderIdBrand")
 )
 
-// Step 2: Infer Type
-type UserId = Schema.Schema.Type<typeof UserId>
-const parsed = Schema.decode(UserId)("user_123")
 
-const data = await Effect.runPromise(parsed);
-console.log(data)
+export type Order_id = typeof ValidateOrderID.Type;
+
+

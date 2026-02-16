@@ -1,10 +1,10 @@
-import { Effect } from "effect"
+import { Effect, Schema } from "effect"
 import type {BillTo,CreditNoteMeta, OrderTaxInfo, OtherCharge, ParsedProduct, Seller, Ship, TaxDetail, } from "./Credittypes"
-
-
+import { ValidateOrderID } from "./BrandedTypes"
+import { validDate } from "effect/Schema"
 export const parseCreditNoteMeta = (text: string):CreditNoteMeta =>  {
 
-  const orderNumber = text.match(
+  const orderNumber= text.match(
     /(Purchase\s+)?Order\s+Number\s*:\s*(\S+)/i
   )?.[2]
 
@@ -23,9 +23,11 @@ export const parseCreditNoteMeta = (text: string):CreditNoteMeta =>  {
   const invoiceMatch = text.match(
     /Invoice\s+No\s+and\s+Date\s*:\s*(\S+)\s+([\d-]+\s+[\d:]+)/i
   )
-
+   const order_number = orderNumber
+      ? Schema.decodeUnknownSync(ValidateOrderID)(orderNumber.trim())
+      : null
   return {
-    order_number: orderNumber,
+    order_number:order_number || undefined,
     order_date: orderDate,
     credit_note_no: creditNoteNo,
     credit_note_date: creditNoteDate,
