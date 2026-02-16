@@ -30,8 +30,6 @@ export const Process = Effect.gen(function* () {
   const folderPath = "./out";
   let TaxInvoiceCount = 0;
   let CreditNoteCount = 0;
-  // let CrediNotes: any[] = [];
-  // let TaxInvoice: any[] = [];
   const files = yield* traced("Read_Directory")(
     Effect.promise(() => readdir(folderPath)),
   );
@@ -91,22 +89,12 @@ export const Process = Effect.gen(function* () {
               ...Product,
               ...tax,
             };
-            const keys = ["sgst", "igst", "cgst", "other_charges"] as const;
+            const total_tax = tax.total_tax || 0;
+            const secondTAx  = tax.other_charges?.line_total || 0;
+            const taxableProductPrice = Product?.taxable_value || 0;
             
-            // const Valid_tax = keys.flatMap((key) => {
-            //   const value = result[key];
-            //   if (!value) return [];
-            //   if ("amount" in value) {
-            //     console.log("data",value.amount)
-            //     return [value.amount];
-            //   }
-
-            //   return value.unit_price 
-            // });
-            // console.log(result)
-            // const total_tax_amount = Valid_tax.reduce((sum, value)=>sum + value,0)
-            
-            // console.log((tax!.total_tax + Product!.taxable_value) , tax.grand_total)
+            console.log(( taxableProductPrice + total_tax), tax.grand_total);
+            console.log("toerh vlid ",tax.other_charges)
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();

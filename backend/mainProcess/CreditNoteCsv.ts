@@ -59,5 +59,5 @@ export function CreditNotegenerateCSV(data: any[]) {
 }
 export async function GetCsv(){
   const innvoices = await Effect.runPromise(Process);
-  CreditNotegenerateCSV(innvoices.CrediNotes);
+  CreditNotegenerateCSV(innvoices.ToalTaxInvoice);
 }
