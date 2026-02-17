@@ -178,20 +178,20 @@ export function parseTaxSection(text: string): OrderTaxInfo {
     grand_total: null,
   };
 
-  // Normalize text
   const cleanText = text.replace(/\r/g, "").trim();
   const lines = cleanText.split("\n").map((l) => l.trim());
 
-  // --------------------------------------------------
-  // 1️⃣ Parse IGST / SGST / CGST (Flexible)
-  // --------------------------------------------------
+  // -----------------------------
+  // 1️⃣ Parse Main Tax (First Occurrence Only)
+  // -----------------------------
 
   const taxRegex =
-    /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?\s*(\d+\.?\d*)/gi;
+    /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?\s*(\d+\.?\d*)/i;
 
-  const taxMatches = [...cleanText.matchAll(taxRegex)];
+  for (const line of lines) {
+    const match = line.match(taxRegex);
+    if (!match) continue;
 
-  for (const match of taxMatches) {
     const type = match[1]?.toUpperCase();
     const rate = Number(match[2]);
     const amount = Number(match[3]);
@@ -199,36 +199,37 @@ export function parseTaxSection(text: string): OrderTaxInfo {
     if (type === "IGST" && !result.igst) {
       result.igst = { rate, amount };
     }
-
     if (type === "SGST" && !result.sgst) {
       result.sgst = { rate, amount };
     }
-
     if (type === "CGST" && !result.cgst) {
       result.cgst = { rate, amount };
     }
   }
 
-  // --------------------------------------------------
-  // 2️⃣ Parse OTHER CHARGES (Flexible Line Parsing)
-  // --------------------------------------------------
+  // -----------------------------
+  // 2️⃣ Parse OTHER CHARGES (Multi-line Safe)
+  // -----------------------------
 
-  const otherLine = lines.find((line) =>
+  const otherIndex = lines.findIndex((line) =>
     /OTHER\s+CHARGES/i.test(line)
   );
 
-  if (otherLine) {
-    const lineNo = otherLine.match(/^(\d+)/)?.[1] ?? null;
+  if (otherIndex !== -1) {
+    const combined =
+      lines[otherIndex] +
+      " " +
+      (lines[otherIndex + 1] ?? "");
+
+    const lineNo = combined.match(/^(\d+)/)?.[1] ?? null;
     const code =
-      otherLine.match(/OTHER\s+CHARGES\s+(\d+)/i)?.[1] ?? "";
+      combined.match(/OTHER\s+CHARGES\s+(\d+)/i)?.[1] ?? "";
 
-    const rsMatches = [...otherLine.matchAll(/Rs\.?\s*(\d+\.?\d*)/g)].map(
-      (m) => Number(m[1])
-    );
+    const rsMatches = [
+      ...combined.matchAll(/Rs\.?\s*(\d+\.?\d*)/g),
+    ].map((m) => Number(m[1]));
 
-    const taxMatch = otherLine.match(
-      /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?\s*(\d+\.?\d*)/i
-    );
+    const taxMatch = combined.match(taxRegex);
 
     if (lineNo && taxMatch && rsMatches.length >= 2) {
       result.other_charges = {
@@ -237,7 +238,7 @@ export function parseTaxSection(text: string): OrderTaxInfo {
         code,
         unit_price: rsMatches[0] ?? 0,
         taxable_value: rsMatches[1] ?? 0,
-        tax_type: taxMatch[1]?.toUpperCase() || "",
+        tax_type: taxMatch[1]?.toUpperCase() ?? "",
         tax_rate: Number(taxMatch[2]),
         tax_amount: Number(taxMatch[3]),
         line_total: rsMatches[rsMatches.length - 1] ?? 0,
@@ -245,18 +246,20 @@ export function parseTaxSection(text: string): OrderTaxInfo {
     }
   }
 
-  // --------------------------------------------------
-  // 3️⃣ Parse TOTAL Line (Colon + No Decimal Safe)
-  // --------------------------------------------------
+  // -----------------------------
+  // 3️⃣ Parse LAST Total Line (Safer)
+  // -----------------------------
 
-  const totalLine = lines.find((line) =>
+  const totalLines = lines.filter((line) =>
     /^Total\s*:?\s*/i.test(line)
   );
 
-  if (totalLine) {
-    const totals = [...totalLine.matchAll(/Rs\.?\s*(\d+\.?\d*)/g)].map(
-      (m) => Number(m[1])
-    );
+  if (totalLines.length > 0) {
+    const lastTotal = totalLines[totalLines.length - 1];
+
+    const totals = [
+      ...lastTotal!.matchAll(/Rs\.?\s*(\d+\.?\d*)/g),
+    ].map((m) => Number(m[1]));
 
     if (totals.length >= 2) {
       result.total_tax = totals[0] || 0;

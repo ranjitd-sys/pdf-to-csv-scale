@@ -89,18 +89,18 @@ export const Process = Effect.gen(function* () {
               ...Product,
               ...tax,
             };
-            // const total_tax = tax.total_tax || 0;
-            // const taxableProductPrice = Product?.taxable_value || 0;
+            const total_tax = tax.total_tax || 0;
+            const taxableProductPrice = Product?.taxable_value || 0;
 
-            // if(tax.other_charges){
+            if(tax.other_charges){
 
              
-            //   console.log(( taxableProductPrice + total_tax + tax.other_charges.taxable_value), tax.grand_total);
-            // }
-            // else{
-            //   console.log(taxableProductPrice + total_tax, tax.grand_total)
-            // }
-            // console.log(tax);;
+              // console.log(taxableProductPrice,( taxableProductPrice + total_atax + tax.other_charges.taxable_value), tax.grand_total);
+            }
+            else{
+              // console.log(taxableProductPrice + total_tax, tax.grand_total)
+            }
+            console.log(res.taxes)
             const Invoices = {Product:Product,  tax: {other_charges:tax.other_charges, total_tax: tax.total_tax, grand_total: tax.grand_total}}
             const validateCorrectInvoice = yield* Schema.decodeUnknown(TaxInvoiceValidation)(Invoices);
             console.log(validateCorrectInvoice)
