@@ -102,9 +102,9 @@ export const OtherChargeSchema = Schema.Struct({
 /* ---------------- OrderTaxInfo ---------------- */
 
 export const OrderTaxInfoSchema = Schema.Struct({
-  igst: Schema.NullOr(TaxDetailSchema),
-  sgst: Schema.NullOr(TaxDetailSchema),
-  cgst: Schema.NullOr(TaxDetailSchema),
+  igst: Schema.optional(Schema.NullOr(TaxDetailSchema)),
+  sgst: Schema.optional(Schema.NullOr(TaxDetailSchema)),
+  cgst: Schema.optional(Schema.NullOr(TaxDetailSchema)),
   other_charges: Schema.NullOr(OtherChargeSchema),
   total_tax: Schema.NullOr(Schema.Number),
   grand_total: Schema.NullOr(Schema.Number)

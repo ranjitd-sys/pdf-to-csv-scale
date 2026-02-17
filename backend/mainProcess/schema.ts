@@ -159,7 +159,7 @@ export const InvoiceSchema = Schema.Struct({
 
 //next part to follow
 
-export const InvoiceValidation = Schema.Struct({
+export const TaxInvoiceValidation = Schema.Struct({
   Product: ParsedProductSchema,
   tax: OrderTaxInfoSchema,
 }).pipe(

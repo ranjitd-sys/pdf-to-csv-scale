@@ -25,7 +25,7 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
-import { CreditNotesArraySchema, InvoiceArraySchema } from "./schema";
+import { CreditNotesArraySchema, InvoiceArraySchema, TaxInvoiceValidation } from "./schema";
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
   let TaxInvoiceCount = 0;
@@ -89,18 +89,21 @@ export const Process = Effect.gen(function* () {
               ...Product,
               ...tax,
             };
-            const total_tax = tax.total_tax || 0;
-            const taxableProductPrice = Product?.taxable_value || 0;
+            // const total_tax = tax.total_tax || 0;
+            // const taxableProductPrice = Product?.taxable_value || 0;
 
-            if(tax.other_charges){
+            // if(tax.other_charges){
 
              
-              console.log(( taxableProductPrice + total_tax + tax.other_charges.taxable_value), tax.grand_total);
-            }
-            else{
-              console.log(taxableProductPrice + total_tax, tax.grand_total)
-            }
-            // console.log(tax)
+            //   console.log(( taxableProductPrice + total_tax + tax.other_charges.taxable_value), tax.grand_total);
+            // }
+            // else{
+            //   console.log(taxableProductPrice + total_tax, tax.grand_total)
+            // }
+            // console.log(tax);;
+            const Invoices = {Product:Product,  tax: {other_charges:tax.other_charges, total_tax: tax.total_tax, grand_total: tax.grand_total}}
+            const validateCorrectInvoice = yield* Schema.decodeUnknown(TaxInvoiceValidation)(Invoices);
+            console.log(validateCorrectInvoice)
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();
@@ -121,7 +124,7 @@ export const Process = Effect.gen(function* () {
               ...tax,
               ...InvoiceDates,
             };
-
+            
             return { type: "invoice", data: result };
           }
         }).pipe(
@@ -135,7 +138,7 @@ export const Process = Effect.gen(function* () {
         );
       }),
 
-    { concurrency: 8 },
+    { concurrency: 5 },
   );
   const TotalCreditNotes = result
     .filter((creditNote) => creditNote.type === "Credit")
