@@ -157,8 +157,11 @@ export const InvoiceSchema = Schema.Struct({
 });
 
 //next part to follew
-export const TaxValidation = Schema.Struct({
-
+export const InvoiceValidation = Schema.Struct({
+  taxable_value:Schema.NullOr(Schema.String),
+  total_tax:Schema.NullOr(Schema.String),
+  extraAmmount: Schema.NullOr(Schema.String),
+  total_price:Schema.NullOr(Schema.String)
 })
 
 export const InvoiceArraySchema = Schema.Array(InvoiceSchema);

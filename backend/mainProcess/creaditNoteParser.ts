@@ -169,71 +169,110 @@ export function ExtractProduct(rawText: string): ParsedProduct | null {
 }
 
 export function parseTaxSection(text: string): OrderTaxInfo {
-  const result = {
-    igst: null as TaxDetail | null,
-    sgst: null as TaxDetail | null,
-    cgst: null as TaxDetail | null,
-    other_charges: null as OtherCharge | null,
-    total_tax: null as number | null,
-    grand_total: null as number | null,
+  const result: OrderTaxInfo = {
+    igst: null,
+    sgst: null,
+    cgst: null,
+    other_charges: null,
+    total_tax: null,
+    grand_total: null,
   };
 
-  // ---------------- IGST ----------------
-  const igstMatch = text.match(/IGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/);
+  // Normalize text (remove extra spaces)
+  const cleanText = text.replace(/\r/g, "");
 
-  if (igstMatch) {
-    result.igst = {
-      rate: Number(igstMatch[1]),
-      amount: Number(igstMatch[2]),
-    };
+  // Split into lines
+  const lines = cleanText.split("\n").map((l) => l.trim());
+
+  // --------------------------------------------------
+  // 1️⃣ Parse IGST / SGST / CGST from entire text
+  // --------------------------------------------------
+
+  const taxRegex =
+    /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?(\d+\.\d{2})/i;
+
+  const allTaxMatches = [...cleanText.matchAll(new RegExp(taxRegex, "gi"))];
+
+  for (const match of allTaxMatches) {
+    const type = match[1]?.toUpperCase();
+    const rate = Number(match[2]);
+    const amount = Number(match[3]);
+
+    if (type === "IGST" && !result.igst) {
+      result.igst = { rate, amount };
+    }
+
+    if (type === "SGST" && !result.sgst) {
+      result.sgst = { rate, amount };
+    }
+
+    if (type === "CGST" && !result.cgst) {
+      result.cgst = { rate, amount };
+    }
   }
 
-  // ---------------- SGST ----------------
-  const sgstMatch = text.match(/SGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/);
+  // --------------------------------------------------
+  // 2️⃣ Parse OTHER CHARGES line
+  // --------------------------------------------------
 
-  if (sgstMatch) {
-    result.sgst = {
-      rate: Number(sgstMatch[1]),
-      amount: Number(sgstMatch[2]),
-    };
-  }
-
-  // ---------------- CGST ----------------
-  const cgstMatch = text.match(/CGST\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})/);
-
-  if (cgstMatch) {
-    result.cgst = {
-      rate: Number(cgstMatch[1]),
-      amount: Number(cgstMatch[2]),
-    };
-  }
-
-  // ---------------- OTHER CHARGES ----------------
-  const otherChargesMatch = text.match(
-    /(\d+)\s+OTHER CHARGES\s+(\d+)\s+NA\s+Rs\.(\d+\.\d{2})\s+\d+\s+Rs\.(\d+\.\d{2})\s+(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:Rs\.(\d+\.\d{2})\s+Rs\.(\d+\.\d{2})/,
+  const otherLine = lines.find((line) =>
+    /OTHER\s+CHARGES/i.test(line)
   );
 
-  if (otherChargesMatch) {
-    result.other_charges = {
-      line_no: Number(otherChargesMatch[1]),
-      description: "OTHER CHARGES",
-      code: otherChargesMatch[2] || "",
-      unit_price: Number(otherChargesMatch[3]),
-      taxable_value: Number(otherChargesMatch[4]),
-      tax_type: otherChargesMatch[5] || "",
-      tax_rate: Number(otherChargesMatch[6]),
-      tax_amount: Number(otherChargesMatch[7]),
-      line_total: Number(otherChargesMatch[8]),
-    };
+  if (otherLine) {
+    const lineNo = otherLine.match(/^(\d+)/)?.[1] ?? null;
+    const code = otherLine.match(/OTHER\s+CHARGES\s+(\d+)/i)?.[1] ?? "";
+
+    const rsMatches = [...otherLine.matchAll(/Rs\.?(\d+\.\d{2})/g)].map(
+      (m) => Number(m[1])
+    );
+
+    /*
+      Based on your example:
+      Rs.20.00 → unit price
+      Rs.16.95 → taxable value
+      Rs.3.05  → tax amount
+      Rs.20.00 → line total
+    */
+
+    const taxMatch = otherLine.match(
+      /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?(\d+\.\d{2})/i
+    );
+
+    if (lineNo && rsMatches.length >= 3 && taxMatch) {
+      result.other_charges = {
+        line_no: Number(lineNo),
+        description: "OTHER CHARGES",
+        code,
+        unit_price: rsMatches[0] || 0,
+        taxable_value: rsMatches[1] || 0,
+        tax_type: taxMatch[1]?.toUpperCase() || "",
+        tax_rate: Number(taxMatch[2]),
+        tax_amount: Number(taxMatch[3]),
+        line_total: rsMatches[rsMatches.length - 1] || 0,
+      };
+    }
   }
 
-  // ---------------- TOTAL ----------------
-  const totalMatch = text.match(/Total\s+Rs\.(\d+\.\d{2})\s+Rs\.(\d+\.?\d*)/);
+  // --------------------------------------------------
+  // 3️⃣ Parse TOTAL Line
+  // --------------------------------------------------
 
-  if (totalMatch) {
-    result.total_tax = Number(totalMatch[1]);
-    result.grand_total = Number(totalMatch[2]);
+  const totalLine = lines.find((line) =>
+    /^Total\s+/i.test(line)
+  );
+
+  if (totalLine) {
+    const totals = [...totalLine.matchAll(/Rs\.?(\d+\.?\d*)/g)].map((m) =>
+      Number(m[1])
+    );
+
+    if (totals.length >= 2) {
+      result.total_tax = totals[0] || 0;
+      result.grand_total = totals[1] || 0;
+    }
   }
 
   return result;
 }
+

@@ -92,9 +92,15 @@ export const Process = Effect.gen(function* () {
             const total_tax = tax.total_tax || 0;
             const secondTAx  = tax.other_charges?.line_total || 0;
             const taxableProductPrice = Product?.taxable_value || 0;
+            if(tax.other_charges){
+
+              // console.log(tax)
+              console.log(( taxableProductPrice + total_tax + tax.other_charges.taxable_value), tax.grand_total);
+            }
+            else{
+              console.log(taxableProductPrice + total_tax, tax.grand_total)
+            }
             console.log(tax)
-            console.log(( taxableProductPrice + total_tax), tax.grand_total);
-            console.log("toerh vlid ",tax.other_charges)
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();
