@@ -178,22 +178,20 @@ export function parseTaxSection(text: string): OrderTaxInfo {
     grand_total: null,
   };
 
-  // Normalize text (remove extra spaces)
-  const cleanText = text.replace(/\r/g, "");
-
-  // Split into lines
+  // Normalize text
+  const cleanText = text.replace(/\r/g, "").trim();
   const lines = cleanText.split("\n").map((l) => l.trim());
 
   // --------------------------------------------------
-  // 1️⃣ Parse IGST / SGST / CGST from entire text
+  // 1️⃣ Parse IGST / SGST / CGST (Flexible)
   // --------------------------------------------------
 
   const taxRegex =
-    /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?(\d+\.\d{2})/i;
+    /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?\s*(\d+\.?\d*)/gi;
 
-  const allTaxMatches = [...cleanText.matchAll(new RegExp(taxRegex, "gi"))];
+  const taxMatches = [...cleanText.matchAll(taxRegex)];
 
-  for (const match of allTaxMatches) {
+  for (const match of taxMatches) {
     const type = match[1]?.toUpperCase();
     const rate = Number(match[2]);
     const amount = Number(match[3]);
@@ -212,7 +210,7 @@ export function parseTaxSection(text: string): OrderTaxInfo {
   }
 
   // --------------------------------------------------
-  // 2️⃣ Parse OTHER CHARGES line
+  // 2️⃣ Parse OTHER CHARGES (Flexible Line Parsing)
   // --------------------------------------------------
 
   const otherLine = lines.find((line) =>
@@ -221,50 +219,43 @@ export function parseTaxSection(text: string): OrderTaxInfo {
 
   if (otherLine) {
     const lineNo = otherLine.match(/^(\d+)/)?.[1] ?? null;
-    const code = otherLine.match(/OTHER\s+CHARGES\s+(\d+)/i)?.[1] ?? "";
+    const code =
+      otherLine.match(/OTHER\s+CHARGES\s+(\d+)/i)?.[1] ?? "";
 
-    const rsMatches = [...otherLine.matchAll(/Rs\.?(\d+\.\d{2})/g)].map(
+    const rsMatches = [...otherLine.matchAll(/Rs\.?\s*(\d+\.?\d*)/g)].map(
       (m) => Number(m[1])
     );
 
-    /*
-      Based on your example:
-      Rs.20.00 → unit price
-      Rs.16.95 → taxable value
-      Rs.3.05  → tax amount
-      Rs.20.00 → line total
-    */
-
     const taxMatch = otherLine.match(
-      /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?(\d+\.\d{2})/i
+      /(IGST|SGST|CGST)\s*@\s*(\d+\.?\d*)%\s*:?\s*Rs\.?\s*(\d+\.?\d*)/i
     );
 
-    if (lineNo && rsMatches.length >= 3 && taxMatch) {
+    if (lineNo && taxMatch && rsMatches.length >= 2) {
       result.other_charges = {
         line_no: Number(lineNo),
         description: "OTHER CHARGES",
         code,
-        unit_price: rsMatches[0] || 0,
-        taxable_value: rsMatches[1] || 0,
+        unit_price: rsMatches[0] ?? 0,
+        taxable_value: rsMatches[1] ?? 0,
         tax_type: taxMatch[1]?.toUpperCase() || "",
         tax_rate: Number(taxMatch[2]),
         tax_amount: Number(taxMatch[3]),
-        line_total: rsMatches[rsMatches.length - 1] || 0,
+        line_total: rsMatches[rsMatches.length - 1] ?? 0,
       };
     }
   }
 
   // --------------------------------------------------
-  // 3️⃣ Parse TOTAL Line
+  // 3️⃣ Parse TOTAL Line (Colon + No Decimal Safe)
   // --------------------------------------------------
 
   const totalLine = lines.find((line) =>
-    /^Total\s+/i.test(line)
+    /^Total\s*:?\s*/i.test(line)
   );
 
   if (totalLine) {
-    const totals = [...totalLine.matchAll(/Rs\.?(\d+\.?\d*)/g)].map((m) =>
-      Number(m[1])
+    const totals = [...totalLine.matchAll(/Rs\.?\s*(\d+\.?\d*)/g)].map(
+      (m) => Number(m[1])
     );
 
     if (totals.length >= 2) {

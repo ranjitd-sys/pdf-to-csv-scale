@@ -100,7 +100,7 @@ export const Process = Effect.gen(function* () {
             else{
               console.log(taxableProductPrice + total_tax, tax.grand_total)
             }
-            console.log(tax)
+            // console.log(tax)
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();
