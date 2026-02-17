@@ -1,5 +1,5 @@
 import type { CreditNote_id, CreditNoteId, Order_id } from "./BrandedTypes";
-
+import { Schema } from "effect";
 export type CreditNoteMeta = {
   order_number?: Order_id;
   order_date?: string;
@@ -64,3 +64,48 @@ export type OrderTaxInfo =  {
   total_tax: number | null;
   grand_total: number | null;
 }
+
+
+export const ParsedProductSchema = Schema.NullOr(
+  Schema.Struct({
+    quantity: Schema.Number,
+    name: Schema.String,
+    sku: Schema.String,
+    quantity_confirm: Schema.Number,
+    unit_price: Schema.Number,
+    discount: Schema.Number,
+    taxable_value: Schema.Number
+  })
+)
+
+/* ---------------- TaxDetail ---------------- */
+
+export const TaxDetailSchema = Schema.Struct({
+  rate: Schema.Number,
+  amount: Schema.Number
+})
+
+/* ---------------- OtherCharge ---------------- */
+
+export const OtherChargeSchema = Schema.Struct({
+  line_no: Schema.Number,
+  description: Schema.String,
+  code: Schema.String,
+  unit_price: Schema.Number,
+  taxable_value: Schema.Number,
+  tax_type: Schema.String,
+  tax_rate: Schema.Number,
+  tax_amount: Schema.Number,
+  line_total: Schema.Number
+})
+
+/* ---------------- OrderTaxInfo ---------------- */
+
+export const OrderTaxInfoSchema = Schema.Struct({
+  igst: Schema.NullOr(TaxDetailSchema),
+  sgst: Schema.NullOr(TaxDetailSchema),
+  cgst: Schema.NullOr(TaxDetailSchema),
+  other_charges: Schema.NullOr(OtherChargeSchema),
+  total_tax: Schema.NullOr(Schema.Number),
+  grand_total: Schema.NullOr(Schema.Number)
+})

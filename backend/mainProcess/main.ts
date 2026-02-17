@@ -90,11 +90,11 @@ export const Process = Effect.gen(function* () {
               ...tax,
             };
             const total_tax = tax.total_tax || 0;
-            const secondTAx  = tax.other_charges?.line_total || 0;
             const taxableProductPrice = Product?.taxable_value || 0;
+
             if(tax.other_charges){
 
-              // console.log(tax)
+             
               console.log(( taxableProductPrice + total_tax + tax.other_charges.taxable_value), tax.grand_total);
             }
             else{

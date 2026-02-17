@@ -1,4 +1,5 @@
-import { Schema } from "effect";
+import { Schema, Secret } from "effect";
+import { OrderTaxInfoSchema, ParsedProductSchema } from "./Credittypes";
 
 export const CreditNoteSchema = Schema.Struct({
   order_number: Schema.optional(Schema.String),
@@ -35,19 +36,19 @@ export const CreditNoteSchema = Schema.Struct({
     Schema.Struct({
       rate: Schema.Number,
       amount: Schema.Number,
-    })
+    }),
   ),
   sgst: Schema.NullOr(
     Schema.Struct({
       rate: Schema.Number,
       amount: Schema.Number,
-    })
+    }),
   ),
   cgst: Schema.NullOr(
     Schema.Struct({
       rate: Schema.Number,
       amount: Schema.Number,
-    })
+    }),
   ),
   other_charges: Schema.NullOr(
     Schema.Struct({
@@ -60,7 +61,7 @@ export const CreditNoteSchema = Schema.Struct({
       tax_rate: Schema.Number,
       tax_amount: Schema.Number,
       line_total: Schema.Number,
-    })
+    }),
   ),
   total_tax: Schema.NullOr(Schema.Number),
   grand_total: Schema.NullOr(Schema.Number),
@@ -90,7 +91,7 @@ export const InvoiceSchema = Schema.Struct({
   // ==========================================
   seller_name: Schema.String,
   // Note: These keys match your 'Seller' type exactly
-  address: Schema.String, 
+  address: Schema.String,
   city: Schema.String,
   state: Schema.String,
   pincode: Schema.String,
@@ -125,19 +126,19 @@ export const InvoiceSchema = Schema.Struct({
     Schema.Struct({
       rate: Schema.Number,
       amount: Schema.Number,
-    })
+    }),
   ),
   sgst: Schema.NullOr(
     Schema.Struct({
       rate: Schema.Number,
       amount: Schema.Number,
-    })
+    }),
   ),
   cgst: Schema.NullOr(
     Schema.Struct({
       rate: Schema.Number,
       amount: Schema.Number,
-    })
+    }),
   ),
   other_charges: Schema.NullOr(
     Schema.Struct({
@@ -150,28 +151,38 @@ export const InvoiceSchema = Schema.Struct({
       tax_rate: Schema.Number,
       tax_amount: Schema.Number,
       line_total: Schema.Number,
-    })
+    }),
   ),
   total_tax: Schema.NullOr(Schema.Number),
   grand_total: Schema.NullOr(Schema.Number),
 });
 
-//next part to follew
+//next part to follow
+
 export const InvoiceValidation = Schema.Struct({
-  taxable_value:Schema.NullOr(Schema.String),
-  total_tax:Schema.NullOr(Schema.String),
-  extraAmmount: Schema.NullOr(Schema.String),
-  total_price:Schema.NullOr(Schema.String)
-})
+  Product: ParsedProductSchema,
+  tax: OrderTaxInfoSchema,
+}).pipe(
+  Schema.filter(
+    (data) => {
+      if (!data.Product) return false;
+      if (data.tax.grand_total === null) return false;
+      const productPrice = data.Product.taxable_value;
+      const total_tax = data.tax.total_tax ?? 0;
+      const other_charges = data.tax.other_charges?.taxable_value ?? 0;
+      const calculated = productPrice + total_tax + other_charges;
+      return Math.abs(calculated - data.tax.grand_total) <= 0.1;
+    },
+    { message: () => "Grand Total Mismatch" },
+  ),
+);
 
 export const InvoiceArraySchema = Schema.Array(InvoiceSchema);
 
-
 export type Invoice = Schema.Schema.Type<typeof InvoiceSchema>;
 export type InvoiceList = Schema.Schema.Type<typeof InvoiceArraySchema>;
-
-
 export const CreditNotesArraySchema = Schema.Array(CreditNoteSchema);
-
 export type CreditNote = Schema.Schema.Type<typeof CreditNoteSchema>;
-export type CreditNotesArray = Schema.Schema.Type<typeof CreditNotesArraySchema>;
+export type CreditNotesArray = Schema.Schema.Type<
+  typeof CreditNotesArraySchema
+>;
