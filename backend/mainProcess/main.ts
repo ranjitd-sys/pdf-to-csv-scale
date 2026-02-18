@@ -163,14 +163,7 @@ export const Process = Effect.gen(function* () {
               ...tax,
               ...InvoiceDates,
             };
-            if(tax.other_charges){
-             console.log(Number(product?.product_taxable_value )+ (tax?.total_tax ?? 0)  + (tax.other_charges.taxable_value),  tax.grand_total);
-            }
-            else {
-
-              console.log(Number(product?.product_taxable_value )+ (tax?.total_tax ?? 0),  tax.grand_total);
-            }
-            console.log("==========New Line==========")
+            
             return { type: "invoice", data: result };
           }
         }).pipe(
@@ -256,5 +249,5 @@ export const Process = Effect.gen(function* () {
     attributes: { "peer.service": "DocumentProcessor" },
   }),
 );
-const data = await Effect.runPromise(Process);
+
 // console.log(data)

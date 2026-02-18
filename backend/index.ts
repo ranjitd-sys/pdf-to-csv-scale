@@ -47,7 +47,7 @@ fastify.post("/upload", async (req, res) => {
         await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
         
         const Process =  await Effect.runPromise(CSV.pipe(Effect.provide(NodeSdkLive)));
-        console.log("data",Process)
+        console.log("data",Process.map(data => data))
         return {
           status: "SUCCESS",
           message: "Data Parse Sussessfully",
@@ -66,8 +66,8 @@ fastify.post("/upload", async (req, res) => {
       }
     }
   } finally {
-    // await $`rm -rf ./out`;
-    // await $`rm -rf ./uploads`;
+    await $`rm -rf ./out`;
+    await $`rm -rf ./uploads`;
   }
 });
 

@@ -74,10 +74,9 @@ export default function ZipMorph() {
   // 2. UPDATE: Added state to store specific validation messages
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  async function downloadFile() {
-    // ... existing download logic
-    console.log("Downloading...");
-  }
+  const handleDownload = () => {
+    window.location.href = "http://localhost:3000/download";
+  };
 
   const handleExecute = async () => {
     if (!file) return;
@@ -465,7 +464,7 @@ export default function ZipMorph() {
                   <RefreshCcw size={14} /> Start New
                 </button>
                 <button
-                  onClick={downloadFile}
+                  onClick={handleDownload}
                   className="flex-2 py-4 bg-black text-white flex items-center justify-center gap-2 hover:tracking-widest transition-all uppercase font-bold text-xs"
                 >
                   <Download size={14} /> Download {targetType}
