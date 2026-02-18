@@ -204,13 +204,14 @@ export const Process = Effect.gen(function* () {
     "credit_note.count": CreditNoteCount,
     "tax_invoice.count": TaxInvoiceCount,
   });
-
+{
   // all Schema Validation
   
   // const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
   //   TotalCreditNotes,
   // ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
-  const [error, CreditValidate] = yield* Effect.partition(
+}
+  const [CNerror, CreditValidate] = yield* Effect.partition(
    TotalCreditNotes,
    (creditNote) =>
      Schema.decodeUnknown(CreditNotesArraySchema)(TotalCreditNotes).pipe(
@@ -226,7 +227,7 @@ export const Process = Effect.gen(function* () {
      )
  );
   
-  const [TaxInerror, TaxInvoiceValidate] = yield* Effect.partition(
+  const [TaxIerror, TaxInvoiceValidate] = yield* Effect.partition(
     ToalTaxInvoice, 
     (taxInvices) => Schema.decodeUnknown(InvoiceArraySchema)(ToalTaxInvoice).pipe(
       Effect.map((validData) => ({
@@ -241,10 +242,9 @@ export const Process = Effect.gen(function* () {
     )
   )
 
-
-
   return {
-
+    TaxIerror,
+    CNerror,
     TaxInvoiceCount,
     CreditNoteCount,
     CreditValidate,
