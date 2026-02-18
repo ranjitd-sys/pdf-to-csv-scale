@@ -172,7 +172,7 @@ export const CSV = Effect.gen(function* () {
 
   console.log("Excel file generated successfully ✅");
 
-  return data.CreditValidate;
+  return data.CreditValidate, data.CNerror, data.TaxIerror;
 }).pipe(Effect.withSpan("CSV Generator"));
 
 export const Main = Effect.gen(function* () {

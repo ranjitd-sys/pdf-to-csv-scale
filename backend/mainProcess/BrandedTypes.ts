@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { extend } from "effect/Scope";
 
 export const OrderId = Schema.String.pipe(
   Schema.pattern(/^\d{18}$/),
@@ -15,6 +16,16 @@ export const GstNumber = Schema.String.pipe(
   Schema.brand("GstNumber")
 );
 
+
+export class NoPdfError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NoPdfError";
+  }
+}
+
+
 export type GstNumber = typeof GstNumber.Type;
 export type CreditNote_id = typeof CreditNoteId.Type;
 export type Order_id = typeof OrderId.Type;
+

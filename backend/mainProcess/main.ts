@@ -2,6 +2,7 @@ import { Effect, Schema } from "effect";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { extractText } from "unpdf";
+import { NoPdfError } from "./BrandedTypes";
 const traced =
   (name: string, attributes?: Record<string, unknown>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>) =>
@@ -25,10 +26,7 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
-import {
-  CreditNotesArraySchema,
-  InvoiceArraySchema,
-} from "./schema";
+import { CreditNotesArraySchema, InvoiceArraySchema } from "./schema";
 import { ParseError } from "effect/ParseResult";
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
@@ -40,7 +38,10 @@ export const Process = Effect.gen(function* () {
   const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
 
   if (pdfFiles.length === 0) {
-    return yield* Effect.fail(new Error("No PDF files found"));
+    console.log("Data")
+    return yield* Effect.fail(
+      new NoPdfError("No PDF files found in ")
+  )
   }
 
   const allTextBlocks = yield* Effect.forEach(
@@ -69,8 +70,6 @@ export const Process = Effect.gen(function* () {
     flatText,
     (data, index) =>
       Effect.gen(function* () {
-        let failedInvoices :any = [];
-        let passedInvoices = [];
         const clean = data.replace(/\r/g, "").trim();
         const isCredit = clean.includes("Credit Note");
 
@@ -96,52 +95,42 @@ export const Process = Effect.gen(function* () {
               ...tax,
             };
             {
-
-            
-            // const total_tax = tax.total_tax || 0;
-            // const taxableProductPrice = Product?.taxable_value || 0;
-
-            // if(tax.other_charges){
-
-            //   // console.log(taxableProductPrice,( taxableProductPrice + total_atax + tax.other_charges.taxable_value), tax.grand_total);
-            // }
-            // else{
-            //   // console.log(taxableProductPrice + total_tax, tax.grand_total)
-            // }
-
-          /// validatin Data
-            // const Invoices = {
-            //   creditNote:Credit_Note.credit_note_no,
-            //   Product: Product,
-            //   tax: {
-            //     other_charges: tax.other_charges,
-            //     total_tax: tax.total_tax,
-            //     grand_total: tax.grand_total,
-            //   },
-            // };
-          // validating 
-
-            
-            
-            // Schema.decodeUnknown(
-            //   TaxInvoiceValidation,
-            // )(Invoices).pipe(Effect.either);
-
-            // Checking wehther it is valid or not
-            // if (validateCorrectInvoice._tag === "Left") {
-            //   const formatError = new ParseError(validateCorrectInvoice.left);
-              
-            //   yield* Effect.sync(() => {
-            //     failedInvoices.push({
-            //       CrditnoteNumber: Invoices.creditNote ?? "#00000",
-            //       reason: formatError,
-            //     });
-            //   });
-            // }
-            // else{
-            //   passedInvoices.push(validateCorrectInvoice.right.creditNote)
-            // }
-}
+              // const total_tax = tax.total_tax || 0;
+              // const taxableProductPrice = Product?.taxable_value || 0;
+              // if(tax.other_charges){
+              //   // console.log(taxableProductPrice,( taxableProductPrice + total_atax + tax.other_charges.taxable_value), tax.grand_total);
+              // }
+              // else{
+              //   // console.log(taxableProductPrice + total_tax, tax.grand_total)
+              // }
+              /// validatin Data
+              // const Invoices = {
+              //   creditNote:Credit_Note.credit_note_no,
+              //   Product: Product,
+              //   tax: {
+              //     other_charges: tax.other_charges,
+              //     total_tax: tax.total_tax,
+              //     grand_total: tax.grand_total,
+              //   },
+              // };
+              // validating
+              // Schema.decodeUnknown(
+              //   TaxInvoiceValidation,
+              // )(Invoices).pipe(Effect.either);
+              // Checking wehther it is valid or not
+              // if (validateCorrectInvoice._tag === "Left") {
+              //   const formatError = new ParseError(validateCorrectInvoice.left);
+              //   yield* Effect.sync(() => {
+              //     failedInvoices.push({
+              //       CrditnoteNumber: Invoices.creditNote ?? "#00000",
+              //       reason: formatError,
+              //     });
+              //   });
+              // }
+              // else{
+              //   passedInvoices.push(validateCorrectInvoice.right.creditNote)
+              // }
+            }
 
             return { type: "Credit", data: result };
           } else {
@@ -163,7 +152,7 @@ export const Process = Effect.gen(function* () {
               ...tax,
               ...InvoiceDates,
             };
-            
+
             return { type: "invoice", data: result };
           }
         }).pipe(
@@ -197,43 +186,42 @@ export const Process = Effect.gen(function* () {
     "credit_note.count": CreditNoteCount,
     "tax_invoice.count": TaxInvoiceCount,
   });
-{
-  // all Schema Validation
-  
-  // const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
-  //   TotalCreditNotes,
-  // ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
-}
+  {
+    // all Schema Validation
+    // const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
+    //   TotalCreditNotes,
+    // ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
+  }
   const [CNerror, CreditValidate] = yield* Effect.partition(
-   TotalCreditNotes,
-   (creditNote) =>
-     Schema.decodeUnknown(CreditNotesArraySchema)(TotalCreditNotes).pipe(
-       Effect.map((validData) => ({
-         validData
-       })),
+    TotalCreditNotes,
+    (creditNote) =>
+      Schema.decodeUnknown(CreditNotesArraySchema)(TotalCreditNotes).pipe(
+        Effect.map((validData) => ({
+          validData,
+        })),
 
-       Effect.mapError((error) => ({
-        message:"Invalid Credit Note",
-         creditNoteNumber: creditNote.order_number,
-         error
-       }))
-     )
- );
-  
+        Effect.mapError((error) => ({
+          message: "Invalid Credit Note",
+          creditNoteNumber: creditNote.order_number,
+          error,
+        })),
+      ),
+  );
+
   const [TaxIerror, TaxInvoiceValidate] = yield* Effect.partition(
-    ToalTaxInvoice, 
-    (taxInvices) => Schema.decodeUnknown(InvoiceArraySchema)(ToalTaxInvoice).pipe(
-      Effect.map((validData) => ({
-        validData,
-      }) ),
-      Effect.mapError((error)=>({
-        message:"Invalid Tax Invoice",
-        TaxInviceNumber: taxInvices.order_date,
-        error,
-        
-      }))
-    )
-  )
+    ToalTaxInvoice,
+    (taxInvices) =>
+      Schema.decodeUnknown(InvoiceArraySchema)(ToalTaxInvoice).pipe(
+        Effect.map((validData) => ({
+          validData,
+        })),
+        Effect.mapError((error) => ({
+          message: "Invalid Tax Invoice",
+          TaxInviceNumber: taxInvices.order_date,
+          error,
+        })),
+      ),
+  );
 
   return {
     TaxIerror,
@@ -242,7 +230,6 @@ export const Process = Effect.gen(function* () {
     CreditNoteCount,
     CreditValidate,
     TaxInvoiceValidate,
-    
   };
 }).pipe(
   Effect.withSpan("PDF_Processing_Pipeline", {

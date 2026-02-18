@@ -9,7 +9,10 @@ import { $ } from "bun";
 import { Effect } from "effect";
 import fs from "fs";
 import { NodeSdk } from "@effect/opentelemetry";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import {
+  BatchSpanProcessor,
+  ConsoleSpanExporter,
+} from "@opentelemetry/sdk-trace-base";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
 import { CSV, Main } from "./mainProcess/CSV";
@@ -43,11 +46,21 @@ fastify.post("/upload", async (req, res) => {
       if (part.type === "file") {
         const safeFile = `${part.filename}`;
         filePath = path.join(UPLOAD_DIR, safeFile);
-        await pipeline(part.file, createWriteStream(filePath));
-        await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
-        
-        const Process =  await Effect.runPromise(CSV.pipe(Effect.provide(NodeSdkLive)));
-        console.log("data",Process.map(data => data))
+        const respon = await pipeline(part.file, createWriteStream(filePath));
+        const resposen = await $`unzip ./${UPLOAD_DIR}/${safeFile} -d out`;
+
+        const Process = await Effect.runPromise(
+          CSV.pipe(Effect.provide(NodeSdkLive)),
+        );
+        // console.log(process.cpuUsage());
+        Process.map((data) => {
+          if (data.error._tag === "ParseError") {
+            return res.status(422).send({
+              status: "Invlid Invoices",
+              Message: "Kindly Upload Valid Invoics",
+            });
+          }
+        });
         return {
           status: "SUCCESS",
           message: "Data Parse Sussessfully",
@@ -55,15 +68,15 @@ fastify.post("/upload", async (req, res) => {
         };
       } else {
         options[part.fieldname] = part.value as string;
+        return;
       }
     }
-   
   } catch (e) {
-    // res.status(500).send({ status: "ERROR", message: "Pipeline failure" });
-    if(e instanceof Error){
-      if(e.message === "Invalid Credit Note Data"){
-        res.status(422).send({status:"Invalid Data", "Message":"Kindly Upload Valid Zip"})
-      }
+    if (e instanceof Error) {
+      res.status(422).send({
+        status: "Only Pdf Alloweds",
+        Message: "Kindly Upload Valid Zip",
+      });
     }
   } finally {
     await $`rm -rf ./out`;
