@@ -405,7 +405,7 @@ export default function ZipMorph() {
 
               <button
                 onClick={handleReset}
-                className="w-full max-w-lg py-4 border-2 border-black bg-white text-black flex items-center justify-center gap-2 hover:bg-black hover:text-white uppercase font-bold text-xs transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] hover:translate-y-[2px] hover:shadow-none"
+                className="w-full max-w-lg py-4 border-2 border-black bg-white text-black flex items-center justify-center gap-2 hover:bg-black hover:text-white uppercase font-bold text-xs transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] hover:translate-y-0.5 hover:shadow-none"
               >
                 <RefreshCcw size={14} /> Upload Corrected File
               </button>
