@@ -1,5 +1,6 @@
 import { Schema, Secret } from "effect";
 import { OrderTaxInfoSchema, ParsedProductSchema } from "./Credittypes";
+import { CreditNoteId } from "./BrandedTypes";
 
 export const CreditNoteSchema = Schema.Struct({
   order_number: Schema.optional(Schema.String),
@@ -159,29 +160,27 @@ export const InvoiceSchema = Schema.Struct({
 
 //next part to follow
 
-export const TaxInvoiceValidation = Schema.Struct({
-  Product: ParsedProductSchema,
-  tax: OrderTaxInfoSchema,
-}).pipe(
-  Schema.filter(
-    (data) => {
-      if (!data.Product) return false;
-      if (data.tax.grand_total === null) return false;
-      const productPrice = data.Product.taxable_value;
-      const total_tax = data.tax.total_tax ?? 0;
-      const other_charges = data.tax.other_charges?.taxable_value ?? 0;
-      const calculated = productPrice + total_tax + other_charges;
-      return Math.abs(calculated - data.tax.grand_total) <= 0.1;
-    },
-    { message: () => "Grand Total Mismatch" },
-  ),
-);
-
 export const InvoiceArraySchema = Schema.Array(InvoiceSchema);
 
 export type Invoice = Schema.Schema.Type<typeof InvoiceSchema>;
 export type InvoiceList = Schema.Schema.Type<typeof InvoiceArraySchema>;
-export const CreditNotesArraySchema = Schema.Array(CreditNoteSchema);
+export const CreditNotesArraySchema = Schema.Array(CreditNoteSchema).pipe(
+  Schema.filter((creditNote) =>
+    creditNote.every((c) => {
+      if (c.grand_total === null) return false;
+      const productPrice = c.taxable_value || 0;
+      const totalTax = c.total_tax ?? 0;
+      const otherCharges = c.other_charges?.taxable_value ?? 0;
+
+      const calculated = productPrice + totalTax + otherCharges;
+      1;
+       return (
+          Math.abs(calculated - c.grand_total) <= 0.1
+        );
+    }),{message: ()=> "Grand Total Mismatch"}
+  ),
+  
+);
 export type CreditNote = Schema.Schema.Type<typeof CreditNoteSchema>;
 export type CreditNotesArray = Schema.Schema.Type<
   typeof CreditNotesArraySchema

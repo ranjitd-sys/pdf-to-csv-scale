@@ -25,7 +25,11 @@ import {
   InvoiceextractProduct,
   invoiceExtractShip,
 } from "./TaxInvoiceParser";
-import { CreditNotesArraySchema, InvoiceArraySchema, TaxInvoiceValidation } from "./schema";
+import {
+  CreditNotesArraySchema,
+  InvoiceArraySchema,
+} from "./schema";
+import { ParseError } from "effect/ParseResult";
 export const Process = Effect.gen(function* () {
   const folderPath = "./out";
   let TaxInvoiceCount = 0;
@@ -65,6 +69,8 @@ export const Process = Effect.gen(function* () {
     flatText,
     (data, index) =>
       Effect.gen(function* () {
+        let failedInvoices :any = [];
+        let passedInvoices = [];
         const clean = data.replace(/\r/g, "").trim();
         const isCredit = clean.includes("Credit Note");
 
@@ -89,21 +95,50 @@ export const Process = Effect.gen(function* () {
               ...Product,
               ...tax,
             };
-            const total_tax = tax.total_tax || 0;
-            const taxableProductPrice = Product?.taxable_value || 0;
+            // const total_tax = tax.total_tax || 0;
+            // const taxableProductPrice = Product?.taxable_value || 0;
 
-            if(tax.other_charges){
+            // if(tax.other_charges){
 
-             
-              // console.log(taxableProductPrice,( taxableProductPrice + total_atax + tax.other_charges.taxable_value), tax.grand_total);
-            }
-            else{
-              // console.log(taxableProductPrice + total_tax, tax.grand_total)
-            }
-            console.log(res.taxes)
-            const Invoices = {Product:Product,  tax: {other_charges:tax.other_charges, total_tax: tax.total_tax, grand_total: tax.grand_total}}
-            const validateCorrectInvoice = yield* Schema.decodeUnknown(TaxInvoiceValidation)(Invoices);
-            console.log(validateCorrectInvoice)
+            //   // console.log(taxableProductPrice,( taxableProductPrice + total_atax + tax.other_charges.taxable_value), tax.grand_total);
+            // }
+            // else{
+            //   // console.log(taxableProductPrice + total_tax, tax.grand_total)
+            // }
+
+          /// validatin Data
+            // const Invoices = {
+            //   creditNote:Credit_Note.credit_note_no,
+            //   Product: Product,
+            //   tax: {
+            //     other_charges: tax.other_charges,
+            //     total_tax: tax.total_tax,
+            //     grand_total: tax.grand_total,
+            //   },
+            // };
+          // validating 
+
+            
+            
+            // Schema.decodeUnknown(
+            //   TaxInvoiceValidation,
+            // )(Invoices).pipe(Effect.either);
+
+            // Checking wehther it is valid or not
+            // if (validateCorrectInvoice._tag === "Left") {
+            //   const formatError = new ParseError(validateCorrectInvoice.left);
+              
+            //   yield* Effect.sync(() => {
+            //     failedInvoices.push({
+            //       CrditnoteNumber: Invoices.creditNote ?? "#00000",
+            //       reason: formatError,
+            //     });
+            //   });
+            // }
+            // else{
+            //   passedInvoices.push(validateCorrectInvoice.right.creditNote)
+            // }
+           
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();
@@ -124,7 +159,7 @@ export const Process = Effect.gen(function* () {
               ...tax,
               ...InvoiceDates,
             };
-            
+
             return { type: "invoice", data: result };
           }
         }).pipe(
@@ -160,10 +195,26 @@ export const Process = Effect.gen(function* () {
   });
 
   // all Schema Validation
-  const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
-    TotalCreditNotes,
-  ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
-
+  
+  // const CreditValidate = yield* Schema.decodeUnknown(CreditNotesArraySchema)(
+  //   TotalCreditNotes,
+  // ).pipe(Effect.mapError(() => new Error("Invalid Credit Note Data")));
+  const [error, CreditValidate] = yield* Effect.partition(
+   TotalCreditNotes,
+   (creditNote) =>
+     Schema.decodeUnknown(CreditNotesArraySchema)(TotalCreditNotes).pipe(
+       Effect.map((validData) => ({
+         validData
+         
+       })),
+       Effect.mapError((error) => ({
+         creditNoteNumber: creditNote.order_number,
+         error
+       }))
+     )
+ );
+  console.log(error);
+  
   const TaxInvoiceVallidate = yield* Schema.decodeUnknown(InvoiceArraySchema)(
     ToalTaxInvoice,
   ).pipe(Effect.mapError(() => new Error("Invalid Tax Invoice Data")));
@@ -182,4 +233,4 @@ export const Process = Effect.gen(function* () {
   }),
 );
 const data = await Effect.runPromise(Process);
-// console.log(data)ss
+console.log(data)
