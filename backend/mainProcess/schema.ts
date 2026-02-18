@@ -160,27 +160,40 @@ export const InvoiceSchema = Schema.Struct({
 
 //next part to follow
 
-export const InvoiceArraySchema = Schema.Array(InvoiceSchema);
+export const InvoiceArraySchema = Schema.Array(InvoiceSchema).pipe(
+  Schema.filter((TaxInvoice) => TaxInvoice.every((ti)=>{
+    if(ti.grand_total === null) return null;
+    const ProductPrice = Number(ti.product_taxable_value) || 0;
+    const totalTax = Number(ti.total_tax) || 0;
+    const otherCharges = ti.other_charges?.taxable_value ?? 0;
+    const calculated = ProductPrice  + totalTax + otherCharges;
+    return (
+      Math.abs(calculated - ti.grand_total) <= 0.1
+    )
+  }), {message:()=>"Grand Total Mismatch"}
+))
 
 export type Invoice = Schema.Schema.Type<typeof InvoiceSchema>;
 export type InvoiceList = Schema.Schema.Type<typeof InvoiceArraySchema>;
+
 export const CreditNotesArraySchema = Schema.Array(CreditNoteSchema).pipe(
   Schema.filter((creditNote) =>
-    creditNote.every((c) => {
-      if (c.grand_total === null) return false;
-      const productPrice = c.taxable_value || 0;
-      const totalTax = c.total_tax ?? 0;
-      const otherCharges = c.other_charges?.taxable_value ?? 0;
+    creditNote.every((cn) => {
+      if (cn.grand_total === null) return false;
+      const productPrice = cn.taxable_value || 0;
+      const totalTax = cn.total_tax ?? 0;
+      const otherCharges = cn.other_charges?.taxable_value ?? 0;
 
       const calculated = productPrice + totalTax + otherCharges;
-      1;
+      
        return (
-          Math.abs(calculated - c.grand_total) <= 0.1
+          Math.abs(calculated - cn.grand_total) <= 0.1
         );
     }),{message: ()=> "Grand Total Mismatch"}
   ),
   
 );
+
 export type CreditNote = Schema.Schema.Type<typeof CreditNoteSchema>;
 export type CreditNotesArray = Schema.Schema.Type<
   typeof CreditNotesArraySchema

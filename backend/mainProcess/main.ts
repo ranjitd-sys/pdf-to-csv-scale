@@ -95,6 +95,9 @@ export const Process = Effect.gen(function* () {
               ...Product,
               ...tax,
             };
+            {
+
+            
             // const total_tax = tax.total_tax || 0;
             // const taxableProductPrice = Product?.taxable_value || 0;
 
@@ -138,7 +141,8 @@ export const Process = Effect.gen(function* () {
             // else{
             //   passedInvoices.push(validateCorrectInvoice.right.creditNote)
             // }
-           
+}
+
             return { type: "Credit", data: result };
           } else {
             const clean = data.replace(/\r/g, "").trim();
@@ -159,7 +163,14 @@ export const Process = Effect.gen(function* () {
               ...tax,
               ...InvoiceDates,
             };
+            if(tax.other_charges){
+             console.log(Number(product?.product_taxable_value )+ (tax?.total_tax ?? 0)  + (tax.other_charges.taxable_value),  tax.grand_total);
+            }
+            else {
 
+              console.log(Number(product?.product_taxable_value )+ (tax?.total_tax ?? 0),  tax.grand_total);
+            }
+            console.log("==========New Line==========")
             return { type: "invoice", data: result };
           }
         }).pipe(
@@ -205,27 +216,40 @@ export const Process = Effect.gen(function* () {
      Schema.decodeUnknown(CreditNotesArraySchema)(TotalCreditNotes).pipe(
        Effect.map((validData) => ({
          validData
-         
        })),
+
        Effect.mapError((error) => ({
+        message:"Invalid Credit Note",
          creditNoteNumber: creditNote.order_number,
          error
        }))
      )
  );
-  console.log(error);
   
-  const TaxInvoiceVallidate = yield* Schema.decodeUnknown(InvoiceArraySchema)(
-    ToalTaxInvoice,
-  ).pipe(Effect.mapError(() => new Error("Invalid Tax Invoice Data")));
+  const [TaxInerror, TaxInvoiceValidate] = yield* Effect.partition(
+    ToalTaxInvoice, 
+    (taxInvices) => Schema.decodeUnknown(InvoiceArraySchema)(ToalTaxInvoice).pipe(
+      Effect.map((validData) => ({
+        validData,
+      }) ),
+      Effect.mapError((error)=>({
+        message:"Invalid Tax Invoice",
+        TaxInviceNumber: taxInvices.order_date,
+        error,
+        
+      }))
+    )
+  )
+
+
 
   return {
-    TotalCreditNotes,
-    ToalTaxInvoice,
+
     TaxInvoiceCount,
     CreditNoteCount,
     CreditValidate,
-    TaxInvoiceVallidate,
+    TaxInvoiceValidate,
+    
   };
 }).pipe(
   Effect.withSpan("PDF_Processing_Pipeline", {
@@ -233,4 +257,4 @@ export const Process = Effect.gen(function* () {
   }),
 );
 const data = await Effect.runPromise(Process);
-console.log(data)
+// console.log(data)
