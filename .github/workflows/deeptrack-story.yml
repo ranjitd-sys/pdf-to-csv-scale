@@ -1,0 +1,20 @@
+name: DeepTrack Story Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      head_sha:
+        description: Commit SHA to verify
+        required: true
+      test_command:
+        description: Test command
+        required: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.head_sha }}
+      - run: ${{ github.event.inputs.test_command }}
